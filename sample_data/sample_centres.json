@@ -1,0 +1,27 @@
+[
+  {
+    "code": "CENTRE_A",
+    "name": "North Zone Examination Centre - Delhi",
+    "city": "New Delhi",
+    "state": "Delhi",
+    "address": "Block 4, University Enclave, New Delhi - 110007",
+    "contact_email": "delhi.centre@exam-authority.gov.in"
+  },
+  {
+    "code": "CENTRE_B",
+    "name": "West Zone Examination Centre - Mumbai",
+    "city": "Mumbai",
+    "state": "Maharashtra",
+    "address": "Sector 9, Tech Park Road, Mumbai - 400076",
+    "contact_email": "mumbai.centre@exam-authority.gov.in"
+  },
+  {
+    "code": "CENTRE_C",
+    "name": "South Zone Examination Centre - Bengaluru",
+    "city": "Bengaluru",
+    "state": "Karnataka",
+    "address": "Innovation Campus, Electronic City, Bengaluru - 560100",
+    "contact_email": "bengaluru.centre@exam-authority.gov.in"
+  }
+]
+

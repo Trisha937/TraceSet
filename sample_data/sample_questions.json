@@ -1,0 +1,262 @@
+[
+  {
+    "code": "Q-AI-01",
+    "subject": "Artificial Intelligence",
+    "topic": "Machine Learning Foundations",
+    "difficulty": "EASY",
+    "marks": 5,
+    "primary_text": "What is the primary objective of Supervised Learning in machine learning?",
+    "options": {
+      "A": "To learn a mapping from input features to known target outputs using labeled data",
+      "B": "To discover hidden structural patterns in unlabeled datasets",
+      "C": "To maximize cumulative reward through interaction with an environment",
+      "D": "To compress data into a lower dimensional subspace without supervision"
+    },
+    "correct_option": "A",
+    "variants": [
+      {
+        "variant_id": "VAR_1",
+        "text": "In machine learning, what is the core purpose of a Supervised Learning algorithm?"
+      },
+      {
+        "variant_id": "VAR_2",
+        "text": "Which statement best describes the fundamental goal of Supervised Learning?"
+      }
+    ],
+    "explanation": "Supervised learning uses labeled pairs (X, y) to learn a predictive function."
+  },
+  {
+    "code": "Q-AI-02",
+    "subject": "Artificial Intelligence",
+    "topic": "Search Algorithms",
+    "difficulty": "EASY",
+    "marks": 5,
+    "primary_text": "Which graph search algorithm is guaranteed to find the shortest path in an unweighted graph?",
+    "options": {
+      "A": "Breadth-First Search (BFS)",
+      "B": "Depth-First Search (DFS)",
+      "C": "Depth-Limited Search (DLS)",
+      "D": "Greedy Best-First Search"
+    },
+    "correct_option": "A",
+    "variants": [
+      {
+        "variant_id": "VAR_1",
+        "text": "For an unweighted graph, which traversal algorithm always finds the shortest path?"
+      },
+      {
+        "variant_id": "VAR_2",
+        "text": "In an unweighted graph structure, which search strategy guarantees the shortest path solution?"
+      }
+    ],
+    "explanation": "BFS explores nodes level-by-level, ensuring shortest path in unweighted graphs."
+  },
+  {
+    "code": "Q-AI-03",
+    "subject": "Artificial Intelligence",
+    "topic": "Neural Networks",
+    "difficulty": "EASY",
+    "marks": 5,
+    "primary_text": "Which activation function outputs values strictly in the range (0, 1)?",
+    "options": {
+      "A": "Sigmoid function",
+      "B": "Hyperbolic tangent (tanh)",
+      "C": "Rectified Linear Unit (ReLU)",
+      "D": "Leaky ReLU"
+    },
+    "correct_option": "A",
+    "variants": [
+      {
+        "variant_id": "VAR_1",
+        "text": "Which neural network activation function maps any real-valued number into the interval (0, 1)?"
+      },
+      {
+        "variant_id": "VAR_2",
+        "text": "What activation function strictly produces outputs between 0 and 1?"
+      }
+    ],
+    "explanation": "The standard logistic sigmoid formula 1/(1+e^-z) maps R to (0, 1)."
+  },
+  {
+    "code": "Q-AI-04",
+    "subject": "Artificial Intelligence",
+    "topic": "Model Evaluation",
+    "difficulty": "MEDIUM",
+    "marks": 5,
+    "primary_text": "How is the F1-Score calculated from Precision and Recall?",
+    "options": {
+      "A": "Harmonic mean of Precision and Recall: 2 * (Precision * Recall) / (Precision + Recall)",
+      "B": "Arithmetic mean of Precision and Recall: (Precision + Recall) / 2",
+      "C": "Geometric mean of Precision and Recall: sqrt(Precision * Recall)",
+      "D": "Weighted sum: 0.5 * Precision + 0.5 * Recall"
+    },
+    "correct_option": "A",
+    "variants": [
+      {
+        "variant_id": "VAR_1",
+        "text": "What is the mathematical formulation of the F1-Score in classification metrics?"
+      },
+      {
+        "variant_id": "VAR_2",
+        "text": "Which formula correctly represents the harmonic mean known as the F1-Score?"
+      }
+    ],
+    "explanation": "F1-score is 2 * (P * R) / (P + R)."
+  },
+  {
+    "code": "Q-AI-05",
+    "subject": "Artificial Intelligence",
+    "topic": "Optimization",
+    "difficulty": "MEDIUM",
+    "marks": 5,
+    "primary_text": "What causes the Vanishing Gradient problem during backpropagation in deep neural networks?",
+    "options": {
+      "A": "Repeated multiplication of small derivatives through many hidden layers with saturating activations",
+      "B": "Using an excessively large learning rate in stochastic gradient descent",
+      "C": "Applying L2 weight decay regularization to convolutional layers",
+      "D": "Initializing weights with excessively high random variance"
+    },
+    "correct_option": "A",
+    "variants": [
+      {
+        "variant_id": "VAR_1",
+        "text": "In deep architectures, what is the underlying cause of the vanishing gradient phenomenon?"
+      },
+      {
+        "variant_id": "VAR_2",
+        "text": "Why do gradients diminish exponentially toward early layers during backpropagation?"
+      }
+    ],
+    "explanation": "Chain rule multiplication of fractions < 1 shrinks gradients toward zero."
+  },
+  {
+    "code": "Q-AI-06",
+    "subject": "Artificial Intelligence",
+    "topic": "Heuristic Search",
+    "difficulty": "MEDIUM",
+    "marks": 5,
+    "primary_text": "In the A* search algorithm, what condition must the heuristic function h(n) satisfy to guarantee optimality with tree search?",
+    "options": {
+      "A": "Admissibility: h(n) must never overestimate the true cost to reach the goal",
+      "B": "Consistency: h(n) <= c(n, a, n') + h(n')",
+      "C": "Monotonicity: h(n) must monotonically increase along all search paths",
+      "D": "Strict positivity: h(n) must always be greater than zero for all nodes"
+    },
+    "correct_option": "A",
+    "variants": [
+      {
+        "variant_id": "VAR_1",
+        "text": "To guarantee finding the optimal path in A* tree search, what property must the heuristic h(n) possess?"
+      },
+      {
+        "variant_id": "VAR_2",
+        "text": "Under what condition is A* search guaranteed to be optimal in tree search?"
+      }
+    ],
+    "explanation": "Tree search A* requires an admissible heuristic (never overestimating true cost)."
+  },
+  {
+    "code": "Q-AI-07",
+    "subject": "Artificial Intelligence",
+    "topic": "Dimensionality Reduction",
+    "difficulty": "MEDIUM",
+    "marks": 5,
+    "primary_text": "What is the mathematical criterion used by Principal Component Analysis (PCA) to find principal directions?",
+    "options": {
+      "A": "Maximizing variance of projected data points onto orthogonal eigenvectors",
+      "B": "Minimizing the cross-entropy loss between latent classes",
+      "C": "Maximizing the margin between distinct class boundaries",
+      "D": "Minimizing the L1 norm of the sparse feature representation"
+    },
+    "correct_option": "A",
+    "variants": [
+      {
+        "variant_id": "VAR_1",
+        "text": "Which optimization objective defines the principal components in PCA?"
+      },
+      {
+        "variant_id": "VAR_2",
+        "text": "In Principal Component Analysis, by what mathematical principle are principal axes chosen?"
+      }
+    ],
+    "explanation": "PCA projects data onto eigenvectors of the covariance matrix to maximize variance."
+  },
+  {
+    "code": "Q-AI-08",
+    "subject": "Artificial Intelligence",
+    "topic": "Regularization",
+    "difficulty": "MEDIUM",
+    "marks": 5,
+    "primary_text": "What distinguishes L1 regularization (Lasso) from L2 regularization (Ridge)?",
+    "options": {
+      "A": "L1 promotes weight sparsity by driving less important coefficients strictly to zero",
+      "B": "L1 adds squared magnitude penalties while L2 adds absolute magnitude penalties",
+      "C": "L1 is computationally differentiable at zero while L2 is non-differentiable at zero",
+      "D": "L2 produces exact sparse feature selection whereas L1 preserves all features"
+    },
+    "correct_option": "A",
+    "variants": [
+      {
+        "variant_id": "VAR_1",
+        "text": "How does Lasso (L1) regularization fundamentally differ in effect from Ridge (L2) regularization?"
+      },
+      {
+        "variant_id": "VAR_2",
+        "text": "What is the key functional difference between L1 and L2 penalty terms in linear models?"
+      }
+    ],
+    "explanation": "L1 norm penalty has diamond contour corners on axes, yielding exact zero coefficients (sparsity)."
+  },
+  {
+    "code": "Q-AI-09",
+    "subject": "Artificial Intelligence",
+    "topic": "Reinforcement Learning",
+    "difficulty": "HARD",
+    "marks": 5,
+    "primary_text": "In tabular Q-Learning, what characterizes the update rule as off-policy?",
+    "options": {
+      "A": "The target value uses the maximum Q-value of the next state regardless of the action taken by the behavior policy",
+      "B": "The agent must follow a deterministic greedy policy during exploratory trials",
+      "C": "The policy update requires human demonstration trajectories rather than environment rewards",
+      "D": "The learning rate alpha decreases linearly with the episode count"
+    },
+    "correct_option": "A",
+    "variants": [
+      {
+        "variant_id": "VAR_1",
+        "text": "Why is Q-Learning formally classified as an off-policy reinforcement learning algorithm?"
+      },
+      {
+        "variant_id": "VAR_2",
+        "text": "What mathematical aspect of the Q-Learning Bellman update makes it off-policy?"
+      }
+    ],
+    "explanation": "Q-Learning evaluates the greedy target policy max_a Q(s', a) while following an epsilon-greedy behavior policy."
+  },
+  {
+    "code": "Q-AI-10",
+    "subject": "Artificial Intelligence",
+    "topic": "Transformers & Attention",
+    "difficulty": "HARD",
+    "marks": 5,
+    "primary_text": "Why does Scaled Dot-Product Attention divide the query-key matrix multiplication (Q * K^T) by the square root of the key dimension (sqrt(d_k))?",
+    "options": {
+      "A": "To prevent extremely large dot products from pushing softmax into regions with vanishingly small gradients",
+      "B": "To ensure the resulting attention weights sum up to exactly one across sequence length",
+      "C": "To decrease the computational matrix complexity from O(N^2) to O(N)",
+      "D": "To normalize the sentence embeddings across batch dimensions during training"
+    },
+    "correct_option": "A",
+    "variants": [
+      {
+        "variant_id": "VAR_1",
+        "text": "What is the primary rationale for scaling the query-key product by 1/sqrt(d_k) in Transformer self-attention?"
+      },
+      {
+        "variant_id": "VAR_2",
+        "text": "In the Transformer architecture, what problem does dividing dot products by sqrt(d_k) prevent?"
+      }
+    ],
+    "explanation": "Large d_k causes variance of dot products to grow, saturating softmax and causing vanishing gradients."
+  }
+]
