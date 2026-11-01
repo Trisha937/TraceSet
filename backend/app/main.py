@@ -6,7 +6,7 @@ from backend.app.database import engine, Base
 from backend.app.routes.paper_routes import router as paper_router
 from backend.app.modules.ocr.routes import router as ocr_router
 from backend.app.modules.matching.routes import router as matching_router
-from backend.app.modules.ocr.routes import router as ocr_router
+
 
 import backend.app.models  # Ensure all SQLAlchemy models are registered
 
@@ -35,7 +35,7 @@ app.add_middleware(
 app.include_router(paper_router)
 app.include_router(ocr_router)
 app.include_router(matching_router)
-app.include_router(ocr_router)
+
 
 
 @app.get("/api/health", tags=["Health"])
