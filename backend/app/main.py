@@ -3,6 +3,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from backend.app.database import engine, Base
 from backend.app.routes.paper_routes import router as paper_router
 from backend.app.modules.matching.routes import router as matching_router
+from backend.app.modules.matching.routes import router as matching_router
+app.include_router(matching_router)
 import backend.app.models  # Ensure all SQLAlchemy models are registered
 
 # Create database tables if they do not exist
