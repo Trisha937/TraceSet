@@ -4,6 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from backend.app.database import engine, Base
 from backend.app.routes.paper_routes import router as paper_router
+from backend.app.modules.ocr.routes import router as ocr_router
 from backend.app.modules.matching.routes import router as matching_router
 from backend.app.modules.ocr.routes import router as ocr_router
 
@@ -17,21 +18,22 @@ except Exception as e:
 
 app = FastAPI(
     title="TraceSet API - Examination Paper Leak Detection System",
-    description="Unified Backend API for TraceSet. Member 1: Paper Generation & Digital Fingerprinting.",
+    description="Unified Backend API for TraceSet. Modules 1, 2, and 3 integrated.",
     version="1.0.0"
 )
 
 # CORS Middleware for React frontend (Member 4)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000", "*"],
+    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000", "http://localhost:5173", "http://127.0.0.1:5173", "*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Register project routes
+# Register Member 1, 2, and 3 Routes
 app.include_router(paper_router)
+app.include_router(ocr_router)
 app.include_router(matching_router)
 app.include_router(ocr_router)
 

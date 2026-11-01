@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from typing import List, Dict, Any, Optional
-from app.modules.matching.engine import calculate_match_score
+from backend.app.modules.matching.engine import calculate_match_score
 
 router = APIRouter(prefix="/matching", tags=["AI Matching"])
 
