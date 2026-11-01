@@ -51,4 +51,5 @@ frontend/build/
 *.sqlite3
 .DS_Store
 Thumbs.db
-
+# Generated uploaded exam files
+/backend/uploads/
