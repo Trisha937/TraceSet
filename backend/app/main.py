@@ -1,8 +1,12 @@
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+
 from backend.app.database import engine, Base
 from backend.app.routes.paper_routes import router as paper_router
 from backend.app.modules.matching.routes import router as matching_router
+from backend.app.modules.ocr.routes import router as ocr_router
+
 import backend.app.models  # Ensure all SQLAlchemy models are registered
 
 # Create database tables if they do not exist
@@ -26,9 +30,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Register Member 1 Routes
+# Register project routes
 app.include_router(paper_router)
 app.include_router(matching_router)
+app.include_router(ocr_router)
 
 
 @app.get("/api/health", tags=["Health"])
@@ -39,7 +44,7 @@ def health_check():
         "system": "TraceSet Examination Security Platform",
         "modules": {
             "member_1_paper_generation": "ONLINE",
-            "member_2_ocr_extraction": "READY_FOR_INTEGRATION",
+            "member_2_ocr_extraction": "ONLINE",
             "member_3_ai_matching": "ONLINE",
             "member_4_frontend": "READY_FOR_INTEGRATION"
         }
@@ -49,4 +54,3 @@ def health_check():
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("backend.app.main:app", host="0.0.0.0", port=8000, reload=True)
-
