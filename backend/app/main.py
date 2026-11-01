@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from backend.app.database import engine, Base
 from backend.app.routes.paper_routes import router as paper_router
+from backend.app.modules.matching.routes import router as matching_router
 import backend.app.models  # Ensure all SQLAlchemy models are registered
 
 # Create database tables if they do not exist
@@ -38,7 +39,7 @@ def health_check():
         "modules": {
             "member_1_paper_generation": "ONLINE",
             "member_2_ocr_extraction": "READY_FOR_INTEGRATION",
-            "member_3_ai_matching": "READY_FOR_INTEGRATION",
+            "member_3_ai_matching": "ONLINE",
             "member_4_frontend": "READY_FOR_INTEGRATION"
         }
     }
