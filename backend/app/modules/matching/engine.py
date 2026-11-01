@@ -1,9 +1,24 @@
 import numpy as np
 from rapidfuzz import fuzz
-from sentence_transformers import SentenceTransformer, util
 
-# Load a lightweight, high-performing Sentence Transformer model for semantic matching
-model = SentenceTransformer('all-MiniLM-L6-v2')
+_model = None
+_util = None
+
+def get_sentence_transformer():
+    global _model, _util
+    if _model is None:
+        try:
+            from sentence_transformers import SentenceTransformer, util
+            _model = SentenceTransformer('all-MiniLM-L6-v2')
+            _util = util
+        except Exception as e:
+            print(f"Notice: SentenceTransformer deferred/fallback ({e})")
+            _model = False
+            _util = False
+    if _model is False:
+        return None, None
+    return _model, _util
+
 
 def calculate_match_score(leaked_questions, official_paper_versions):
     """
@@ -11,6 +26,7 @@ def calculate_match_score(leaked_questions, official_paper_versions):
     and ranks candidates based on similarity, option ordering, and evidence.
     """
     candidates_scores = []
+    st_model, st_util = get_sentence_transformer()
 
     for version in official_paper_versions:
         version_id = version.get("paper_version_id")
@@ -33,9 +49,15 @@ def calculate_match_score(leaked_questions, official_paper_versions):
                 o_options = o_q.get("options", {})
 
                 # 1. Semantic Similarity (Meaning matching)
-                emb1 = model.encode(l_text, convert_to_tensor=True)
-                emb2 = model.encode(o_text, convert_to_tensor=True)
-                semantic_sim = float(util.cos_sim(emb1, emb2)[0][0]) * 100  # Scale to 0-100
+                if st_model is not None and st_util is not None:
+                    try:
+                        emb1 = st_model.encode(l_text, convert_to_tensor=True)
+                        emb2 = st_model.encode(o_text, convert_to_tensor=True)
+                        semantic_sim = float(st_util.cos_sim(emb1, emb2)[0][0]) * 100
+                    except Exception:
+                        semantic_sim = float(fuzz.token_set_ratio(l_text.lower(), o_text.lower()))
+                else:
+                    semantic_sim = float(fuzz.token_set_ratio(l_text.lower(), o_text.lower()))
 
                 # 2. Fuzzy Text Matching (Wording/Spelling matching)
                 fuzzy_sim = fuzz.ratio(l_text.lower(), o_text.lower())
