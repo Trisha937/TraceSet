@@ -10,6 +10,8 @@ DATABASE_URL = os.getenv(
     "DATABASE_URL",
     "postgresql://postgres:admin@localhost:5432/traceset"
 )
+if DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 
 # Configure SQLAlchemy engine
 # pool_pre_ping=True helps reconnect if connection drops
@@ -34,4 +36,3 @@ def get_db():
         yield db
     finally:
         db.close()
-
