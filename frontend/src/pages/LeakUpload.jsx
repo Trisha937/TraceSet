@@ -288,11 +288,18 @@ export default function LeakUpload() {
           className="mt-6 px-4 py-3 rounded-ts"
           style={{ background: '#0A0A0A', border: '1px solid #1A1A1A' }}
         >
-          <p className="ts-label mb-1.5">Module Status</p>
-          <p className="font-sora text-ts-muted leading-relaxed" style={{ fontSize: 12 }}>
-            OCR extraction is currently running in <span className="font-mono text-ts-amber">MOCK MODE</span>.
-            Set <span className="font-mono text-ts-code">VITE_USE_MOCK_OCR=false</span> when Member 2 delivers the OCR backend.
-          </p>
+         <p className="font-sora text-ts-muted leading-relaxed" style={{ fontSize: 12 }}>
+  OCR extraction is currently running in{' '}
+  {import.meta.env.VITE_USE_MOCK_OCR === 'true' ? (
+    <span className="font-mono text-ts-amber">MOCK MODE</span>
+  ) : (
+    <span className="font-mono text-ts-cyan">REAL BACKEND MODE</span>
+  )}
+  .
+  {import.meta.env.VITE_USE_MOCK_OCR === 'true'
+    ? ' Mock OCR responses are enabled.'
+    : ' Uploaded files are processed by the FastAPI backend.'}
+</p>
         </div>
       </div>
     </div>

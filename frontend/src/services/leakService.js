@@ -79,9 +79,9 @@ export const leakService = {
     };
   },
 
-  async deleteLeakUpload() {
-    throw new Error(
-      'Delete upload is not yet supported by the backend.'
-    );
-  },
+  async deleteLeakUpload(uploadId) {
+  return apiRequest(`/api/leaks/${uploadId}`, {
+    method: 'DELETE',
+  });
+},
 };
