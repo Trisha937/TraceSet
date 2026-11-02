@@ -1,0 +1,21 @@
+EXAMINATION QUESTION PAPER - CONFIDENTIAL LEAK
+Paper Code: UNKNOWN
+Subject: Computer Science & Artificial Intelligence
+
+Q1. To guarantee finding the optimal path in A* tree search, what property must the heuristic h(n) possess?
+A. Consistency: h(n) <= c(n, a, n') + h(n')
+B. Admissibility: h(n) must never overestimate the true cost to reach the goal
+C. Monotonicity: h(n) must monotonically increase along all search paths
+D. Strict positivity: h(n) must always be greater than zero for all nodes
+
+Q2. For an unweighted graph, which traversal algorithm always finds the shortest path?
+A. Depth-Limited Search (DLS)
+B. Breadth-First Search (BFS)
+C. Depth-First Search (DFS)
+D. Greedy Best-First Search
+
+Q3. What is the primary rationale for scaling the query-key product by 1/sqrt(d_k) in Transformer self-attention?
+A. To decrease the computational matrix complexity from O(N^2) to O(N)
+B. To prevent extremely large dot products from pushing softmax into regions with vanishingly small gradients
+C. To ensure the resulting attention weights sum up to exactly one across sequence length
+D. To normalize the sentence embeddings across batch dimensions during training

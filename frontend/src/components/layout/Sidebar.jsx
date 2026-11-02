@@ -127,7 +127,7 @@ export default function Sidebar() {
 
         {/* Build info */}
         <p className="font-mono text-ts-muted mt-3" style={{ fontSize: 10 }}>
-          v0.1.0 · Member 4
+          TraceSet v1.0.0 · Core Engine
         </p>
       </div>
     </aside>

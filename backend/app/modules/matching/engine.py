@@ -24,6 +24,7 @@ def calculate_match_score(leaked_questions, official_paper_versions):
     """
     Compares extracted leaked questions against official paper versions 
     and ranks candidates based on similarity, option ordering, and evidence.
+    Supports full and partial leaks.
     """
     candidates_scores = []
     st_model, st_util = get_sentence_transformer()
@@ -59,13 +60,16 @@ def calculate_match_score(leaked_questions, official_paper_versions):
                 else:
                     semantic_sim = float(fuzz.token_set_ratio(l_text.lower(), o_text.lower()))
 
-                # 2. Fuzzy Text Matching (Wording/Spelling matching)
-                fuzzy_sim = fuzz.ratio(l_text.lower(), o_text.lower())
+                # 2. Fuzzy Text Matching (Wording/Spelling matching) - support partial / truncated lines from OCR
+                fuzzy_sim = max(
+                    fuzz.partial_ratio(l_text.lower(), o_text.lower()),
+                    fuzz.token_set_ratio(l_text.lower(), o_text.lower())
+                )
 
                 # Combined text score (weighted average)
                 text_score = (semantic_sim * 0.6) + (fuzzy_sim * 0.4)
 
-                if text_score > 75:  # Threshold for considering it a match
+                if text_score > 60:  # Robust threshold accommodating optical distortion and OCR typos
                     matched_with_question = True
                     best_question_score = max(best_question_score, text_score)
 
@@ -78,11 +82,9 @@ def calculate_match_score(leaked_questions, official_paper_versions):
                 matched_count += 1
                 total_score += best_question_score
 
-        avg_score = (
-    total_score / len(official_questions)
-    if official_questions and matched_count > 0
-    else 0
-)
+        # Normalize score over the number of leaked questions analyzed (supports partial leaks)
+        eval_count = len(leaked_questions) if leaked_questions else len(official_questions)
+        avg_score = (total_score / eval_count) if eval_count and matched_count > 0 else 0
 
         if matched_count > 0:
             if "Question wording matches" not in evidence_list:

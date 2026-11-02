@@ -1,4 +1,3 @@
-
 import io
 import shutil
 import os
@@ -15,6 +14,24 @@ from backend.app.modules.ocr.config import (
     TESSERACT_CMD,
 )
 from backend.app.modules.ocr.exceptions import OCRUnavailableError
+
+_easyocr_reader = None
+
+
+def _get_easyocr_reader():
+    global _easyocr_reader
+    if _easyocr_reader is None:
+        import easyocr
+        cache_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "..", "..", ".easyocr_cache"))
+        os.makedirs(cache_dir, exist_ok=True)
+        _easyocr_reader = easyocr.Reader(
+            ["en"],
+            gpu=False,
+            model_storage_directory=cache_dir,
+            user_network_directory=cache_dir,
+            download_enabled=False
+        )
+    return _easyocr_reader
 
 
 def _get_tesseract_cmd():
@@ -53,48 +70,39 @@ def _image_to_numpy(image: Any):
 
 
 def ocr_image(image: Any) -> tuple[str, float]:
-    _configure_tesseract()
-
     image_array = _image_to_numpy(image)
 
-    if image_array.ndim == 3:
-        image_array = cv2.cvtColor(
-            image_array,
-            cv2.COLOR_RGB2GRAY,
-        )
+    # 1. Try Tesseract OCR if installed
+    try:
+        _configure_tesseract()
+        gray = image_array
+        if gray.ndim == 3:
+            gray = cv2.cvtColor(gray, cv2.COLOR_RGB2GRAY)
 
-    config = (
-        f"--psm {OCR_TESSERACT_PSM} "
-        f"-l {OCR_TESSERACT_LANG}"
-    )
+        config = f"--psm {OCR_TESSERACT_PSM} -l {OCR_TESSERACT_LANG}"
+        text = pytesseract.image_to_string(gray, config=config)
+        data = pytesseract.image_to_data(gray, config=config, output_type=pytesseract.Output.DICT)
 
-    text = pytesseract.image_to_string(
-        image_array,
-        config=config,
-    )
+        conf_values = []
+        for value in data.get("conf", []):
+            try:
+                confidence = float(value)
+                if confidence >= 0:
+                    conf_values.append(confidence)
+            except (ValueError, TypeError):
+                continue
 
-    data = pytesseract.image_to_data(
-        image_array,
-        config=config,
-        output_type=pytesseract.Output.DICT,
-    )
+        avg_conf = round(sum(conf_values) / len(conf_values), 2) if conf_values else 0.0
+        return text.strip(), avg_conf
 
-    conf_values = []
-
-    for value in data.get("conf", []):
+    except Exception:
+        # 2. Seamless Fallback to EasyOCR (specified in team plan)
         try:
-            confidence = float(value)
-
-            if confidence >= 0:
-                conf_values.append(confidence)
-
-        except (ValueError, TypeError):
-            continue
-
-    avg_conf = (
-        round(sum(conf_values) / len(conf_values), 2)
-        if conf_values
-        else 0.0
-    )
-
-    return text.strip(), avg_conf
+            reader = _get_easyocr_reader()
+            results = reader.readtext(image_array)
+            text_lines = [r[1] for r in results]
+            conf_values = [r[2] * 100 for r in results]
+            avg_conf = round(sum(conf_values) / len(conf_values), 2) if conf_values else 0.0
+            return "\n".join(text_lines), avg_conf
+        except Exception as e:
+            raise OCRUnavailableError(f"Both Tesseract and EasyOCR engines encountered an error: {e}")

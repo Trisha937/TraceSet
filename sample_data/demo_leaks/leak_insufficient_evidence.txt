@@ -1,0 +1,6 @@
+LEAKED FRAGMENT
+Q1. What is machine learning?
+A. A branch of AI focusing on data and algorithms
+B. A hardware manufacturing standard
+C. A database indexing technique
+D. An operating system kernel

@@ -1,0 +1,13 @@
+SUSPECTED LEAKED EXAM QUESTIONS
+
+Q1. Why does Scaled Dot-Product Attention divide the query-key matrix multiplication (Q * K^T) by the square root of the key dimension (sqrt(d_k))?
+A. To prevent extremely large dot products from pushing softmax into regions with vanishingly small gradients
+B. To decrease the computational matrix complexity from O(N^2) to O(N)
+C. To ensure the resulting attention weights sum up to exactly one across sequence length
+D. To normalize the sentence embeddings across batch dimensions during training
+
+Q2. What is the primary objective of Supervised Learning in machine learning?
+A. To discover hidden structural patterns in unlabeled datasets
+B. To learn a mapping from input features to known target outputs using labeled data
+C. To maximize cumulative reward through interaction with an environment
+D. To compress data into a lower dimensional subspace without supervision

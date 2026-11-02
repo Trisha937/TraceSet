@@ -53,3 +53,7 @@ frontend/build/
 Thumbs.db
 # Generated uploaded exam files
 /backend/uploads/
+
+
+# Model caches
+.easyocr_cache/

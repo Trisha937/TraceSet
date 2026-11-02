@@ -1,4 +1,3 @@
-
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -6,7 +5,6 @@ from backend.app.database import engine, Base
 from backend.app.routes.paper_routes import router as paper_router
 from backend.app.modules.ocr.routes import router as ocr_router
 from backend.app.modules.matching.routes import router as matching_router
-
 
 import backend.app.models  # Ensure all SQLAlchemy models are registered
 
@@ -37,7 +35,6 @@ app.include_router(ocr_router)
 app.include_router(matching_router)
 
 
-
 @app.get("/api/health", tags=["Health"])
 def health_check():
     """System health check and module status."""
@@ -45,10 +42,10 @@ def health_check():
         "status": "healthy",
         "system": "TraceSet Examination Security Platform",
         "modules": {
-            "member_1_paper_generation": "ONLINE",
-            "member_2_ocr_extraction": "ONLINE",
-            "member_3_ai_matching": "ONLINE",
-            "member_4_frontend": "READY_FOR_INTEGRATION"
+            "paper_generation": "ONLINE",
+            "ocr_extraction": "ONLINE",
+            "ai_matching": "ONLINE",
+            "dashboard_ui": "ONLINE"
         }
     }
 
