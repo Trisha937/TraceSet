@@ -155,8 +155,9 @@ export default function LeakUpload() {
     navigate(`/results/${upload.id}`)
   }
 
-  const processingCount = uploads.filter(u => u.status === 'PROCESSING').length
-
+  const processingCount = (uploads || []).filter(
+  u => u?.status === 'PROCESSING'
+    ).length
   return (
     <div className="ts-page">
       <Topbar
@@ -257,7 +258,7 @@ export default function LeakUpload() {
                   </tr>
                 </thead>
                 <tbody>
-                  {uploads.map(upload => (
+                  {(uploads || []).filter(Boolean).map(upload => (
                     <LeakUploadRow
                       key={upload.id}
                       upload={upload}

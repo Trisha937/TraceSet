@@ -1,60 +1,125 @@
+
 /**
- * matchingService.js — Member 3 (AI Matching & Source Identification)
- *
- * VITE_USE_MOCK_MATCHING=true → uses mockData (Member 3 not yet implemented)
- * VITE_USE_MOCK_MATCHING=false → will make real API calls when Member 3 delivers
- *
- * Replace this file with real API calls once Member 3 integrates.
- * Expected endpoint: POST /api/matching/analyse  { upload_id: string }
- * Expected response: MatchingAnalysisResult (see backend/app/schemas/shared.py)
+ * matchingService.js
+ * Real backend integration for TraceSet forensic matching.
  */
-import { mockAnalysisResults } from './mockData'
 
-const USE_MOCK = import.meta.env.VITE_USE_MOCK_MATCHING !== 'false'
+const API_BASE_URL = (
+  import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000'
+).replace(/\/$/, '')
 
-// ── Local session store (mock phase only) ─────────────────────────────────
-let _results = { ...mockAnalysisResults }
+async function apiRequest(url, options = {}) {
+  const response = await fetch(`${API_BASE_URL}${url}`, options)
 
-export const matchingService = {
-  // Run forensic analysis for a given upload
-  async runAnalysis(uploadId) {
-    if (USE_MOCK) {
-      await delay(1_800) // simulate AI processing time
+  const contentType = response.headers.get('content-type') || ''
+  const body = contentType.includes('application/json')
+    ? await response.json()
+    : await response.text()
 
-      // Return pre-defined result if exists, or generate a generic one
-      if (_results[uploadId]) {
-        return _results[uploadId]
-      }
+  if (!response.ok) {
+    const message =
+      typeof body === 'object'
+        ? body.detail || body.message
+        : body
 
-      // Generic fallback for newly uploaded mocks
-      const fallback = {
-        id:       `analysis-mock-${Date.now()}`,
-        upload_id: uploadId,
-        status:   'insufficient_evidence',
-        top_candidate_version_id: null,
-        top_candidate_centre_id:  null,
-        top_similarity_score:     null,
-        total_matched_questions:  0,
-        explanation:
-          'Insufficient evidence — this upload was recently added and has limited extracted questions. ' +
-          'Please try uploading a clearer scan with more visible questions.',
-        warnings: ['Newly uploaded file — limited extracted questions available'],
-        ranked_candidates: [],
-      }
-      _results[uploadId] = fallback
-      return fallback
-    }
-    // TODO: return apiClient.post('/api/matching/analyse', { upload_id: uploadId })
-  },
+    throw new Error(message || `API error: ${response.status}`)
+  }
 
-  // Get existing analysis result for an upload
-  async getAnalysisResult(uploadId) {
-    if (USE_MOCK) {
-      await delay(200)
-      return _results[uploadId] || null
-    }
-    // TODO: return apiClient.get(`/api/matching/results/${uploadId}`)
-  },
+  return body
 }
 
-const delay = (ms) => new Promise(r => setTimeout(r, ms))
+function unwrapData(response) {
+  return response?.data ?? response
+}
+
+export const matchingService = {
+  async runAnalysis(uploadId) {
+    // 1. Fetch extracted questions from the uploaded paper.
+    const upload = await apiRequest(
+      `/api/leaks/${encodeURIComponent(uploadId)}/questions`
+    )
+
+    const extractedQuestions = unwrapData(upload)
+
+    if (!Array.isArray(extractedQuestions) || extractedQuestions.length === 0) {
+      throw new Error('No extracted questions found for this upload.')
+    }
+
+    // 2. Fetch official paper fingerprints.
+    const fingerprintResponse = await apiRequest(
+      '/api/papers/fingerprints'
+    )
+
+    const fingerprints = unwrapData(fingerprintResponse)
+
+    if (!Array.isArray(fingerprints) || fingerprints.length === 0) {
+      throw new Error(
+        'No official paper fingerprints found. Generate official paper versions first.'
+      )
+    }
+
+    // 3. Convert OCR questions to the matching engine format.
+    const leakedQuestions = extractedQuestions.map(question => ({
+      question_text:
+        question.cleaned_text ||
+        question.extracted_text ||
+        question.question_text ||
+        '',
+      options: question.options || {},
+    })).filter(question => question.question_text.trim())
+
+    // 4. Convert stored fingerprints to the matching engine format.
+    const officialPaperVersions = fingerprints.map(version => ({
+      paper_version_id: version.paper_version_id || version.id,
+      centre_id: version.centre_id,
+      questions: (version.fingerprints || []).map(fingerprint => ({
+        question_text: fingerprint.variant_text || '',
+        options: fingerprint.rendered_options || {},
+      })),
+    }))
+
+    if (leakedQuestions.length === 0) {
+      throw new Error('No usable question text was extracted.')
+    }
+
+    if (!officialPaperVersions.some(version => version.questions.length > 0)) {
+      throw new Error('Official fingerprints contain no questions to compare.')
+    }
+
+    // 5. Call the actual backend matching engine.
+    const result = await apiRequest('/matching/analyze', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        leaked_questions: leakedQuestions,
+        official_paper_versions: officialPaperVersions,
+      }),
+    })
+
+    const matchingResult = unwrapData(result)
+
+    const candidates = matchingResult.ranked_candidates || []
+    const topCandidate = candidates[0] || null
+
+    // 6. Adapt backend response to the existing frontend UI.
+    return {
+      id: `analysis-${uploadId}`,
+      upload_id: uploadId,
+      status: matchingResult.status,
+      top_candidate_version_id: topCandidate?.paper_version_id || null,
+      top_candidate_centre_id: topCandidate?.centre_id || null,
+      top_similarity_score: topCandidate?.similarity_score ?? null,
+      total_matched_questions: topCandidate?.matched_questions ?? 0,
+      explanation: matchingResult.explanation || '',
+      warnings: matchingResult.warnings || [],
+      ranked_candidates: candidates,
+    }
+  },
+
+  // The backend currently has no endpoint for retrieving saved analyses.
+  async getAnalysisResult() {
+    return null
+  },
+}

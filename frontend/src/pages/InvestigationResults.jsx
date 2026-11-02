@@ -18,9 +18,20 @@ import { useToast } from '../components/ui/Toast'
 
 function formatDate(iso) {
   if (!iso) return '—'
-  return new Date(iso).toLocaleString('en-IN', {
-    day: '2-digit', month: 'short', year: 'numeric',
-    hour: '2-digit', minute: '2-digit',
+
+  // Backend timestamps are UTC but arrive without a timezone marker.
+  const utcTimestamp = /Z$|[+-]\d{2}:\d{2}$/.test(iso)
+    ? iso
+    : `${iso}Z`
+
+  return new Date(utcTimestamp).toLocaleString('en-IN', {
+    timeZone: 'Asia/Kolkata',
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true,
   })
 }
 
@@ -279,12 +290,15 @@ export default function InvestigationResults() {
       // Update URL
       navigate(`/results/${selectedUploadId}`, { replace: true })
       if (res.status === 'possible_match') {
-        toast.success('Analysis complete. Source identified with high confidence.')
-      } else if (res.status === 'insufficient_evidence') {
-        toast.warning('Analysis complete. Insufficient evidence for reliable attribution.')
-      } else {
-        toast.info('Analysis complete.')
-      }
+  toast.success('Analysis complete. A possible source match was found.')
+} else if (
+  res.status === 'ambiguous_match' ||
+  res.status === 'no_match'
+) {
+  toast.warning('Analysis complete. Source could not be reliably identified.')
+} else {
+  toast.info('Analysis complete.')
+}
     } catch (err) {
       toast.error(err.message || 'Analysis failed.')
     } finally {
@@ -301,18 +315,20 @@ export default function InvestigationResults() {
     loadExistingResult(id)
   }
 
-  const selectedUpload = uploads.find(u => u.id === selectedUploadId)
-  const showUncertainty = result && (
-    result.status === 'insufficient_evidence' ||
-    result.status === 'multiple_candidates' ||
-    result.status === 'no_match'
-  )
-
+const showUncertainty = result && (
+  result.status === 'insufficient_evidence' ||
+  result.status === 'multiple_candidates' ||
+  result.status === 'ambiguous_match' ||
+  result.status === 'no_match'
+)
+const selectedUpload = uploads.find(
+  (upload) => upload.id === selectedUploadId
+) || null
   return (
     <div className="ts-page">
       <Topbar
         title="Investigation Results"
-        subtitle="Forensic attribution — AI matching engine (mock)"
+        subtitle="Forensic attribution — AI matching engine"
         actions={
           selectedUploadId && !analysing && (
             <Button
@@ -443,13 +459,10 @@ export default function InvestigationResults() {
               className="mt-6 px-4 py-3 rounded-ts"
               style={{ background: '#0A0A0A', border: '1px solid #1A1A1A' }}
             >
-              <p className="ts-label mb-1.5">Forensic Disclaimer</p>
               <p className="font-sora text-ts-muted leading-relaxed" style={{ fontSize: 12 }}>
-                Similarity scores represent statistical likelihood of source match, not absolute proof.
-                TraceSet reports transparent evidence breakdowns and abstains from low-confidence attributions.
-                AI Matching is currently running in <span className="font-mono text-ts-amber">MOCK MODE</span>.
-                Set <span className="font-mono text-ts-code">VITE_USE_MOCK_MATCHING=false</span> when Member 3 integrates.
-              </p>
+  Similarity scores represent statistical likelihood of source match, not absolute proof.
+  TraceSet reports transparent evidence breakdowns and abstains from low-confidence attributions.
+</p>
             </div>
           </div>
         )}

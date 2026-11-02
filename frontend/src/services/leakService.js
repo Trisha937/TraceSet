@@ -1,101 +1,87 @@
+
 /**
- * leakService.js — Member 2 (OCR / Leak Upload)
- *
- * VITE_USE_MOCK_OCR=true → uses mockData (Member 2 not yet implemented)
- * VITE_USE_MOCK_OCR=false → will make real API calls when Member 2 delivers
- *
- * Manages local session state for uploads during the mock phase.
- * Replace this entire file with real API calls once Member 2 integrates.
+ * leakService.js
+ * Real OCR / Leak Upload API integration
  */
-import { mockLeakUploads, mockExtractedQuestions } from './mockData'
 
-const USE_MOCK = import.meta.env.VITE_USE_MOCK_OCR !== 'false'
+const API_BASE_URL = (
+  import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000'
+).replace(/\/$/, '');
 
-// ── Local session store (mock phase only) ─────────────────────────────────
-let _uploads = [...mockLeakUploads]
-let _questions = { ...mockExtractedQuestions }
+async function apiRequest(url, options = {}) {
+  const response = await fetch(`${API_BASE_URL}${url}`, options);
 
-export const leakService = {
-  // List all uploads
-  async getLeakUploads() {
-    if (USE_MOCK) {
-      await delay(250)
-      return [..._uploads].sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
-    }
-    // TODO: return apiClient.get('/api/ocr/uploads')
-  },
+  const contentType = response.headers.get('content-type') || '';
+  const body = contentType.includes('application/json')
+    ? await response.json()
+    : await response.text();
 
-  // Get single upload with its extracted questions
-  async getLeakUpload(id) {
-    if (USE_MOCK) {
-      await delay(200)
-      const upload = _uploads.find(u => u.id === id)
-      return upload ? { ...upload, extracted_questions: _questions[id] || [] } : null
-    }
-    // TODO: return apiClient.get(`/api/ocr/uploads/${id}`)
-  },
+  if (!response.ok) {
+    const message =
+      typeof body === 'object'
+        ? body.detail || body.message
+        : body;
 
-  // Upload a new file (mock: simulates processing pipeline)
-  async uploadLeak(file) {
-    if (USE_MOCK) {
-      await delay(600) // simulate network upload
+    throw new Error(message || `API error: ${response.status}`);
+  }
 
-      const newUpload = {
-        id:                  `upload-mock-${Date.now()}`,
-        filename:            file.name,
-        file_path:           `/uploads/${file.name}`,
-        file_type:           file.type,
-        file_size_bytes:     file.size,
-        status:              'PENDING',
-        total_pages:         1,
-        processing_warnings: [],
-        created_at:          new Date().toISOString(),
-      }
-
-      _uploads = [newUpload, ..._uploads]
-
-      // Simulate async OCR processing: PENDING → PROCESSING → EXTRACTED
-      setTimeout(() => {
-        _uploads = _uploads.map(u =>
-          u.id === newUpload.id ? { ...u, status: 'PROCESSING' } : u
-        )
-      }, 1_200)
-
-      setTimeout(() => {
-        _uploads = _uploads.map(u =>
-          u.id === newUpload.id ? { ...u, status: 'EXTRACTED' } : u
-        )
-        _questions[newUpload.id] = [
-          {
-            id: `eq-mock-${Date.now()}`,
-            upload_id: newUpload.id,
-            detected_question_number: 1, detected_order: 1,
-            extracted_text: 'Mock extracted question from uploaded file',
-            cleaned_text:   'Mock extracted question from uploaded file',
-            options: { A: 'Option A', B: 'Option B', C: 'Option C', D: 'Option D' },
-            detected_option_order: ['A','B','C','D'],
-            page_number: 1, extraction_quality: 'HIGH', is_partial: 'NO', warnings: [],
-          },
-        ]
-      }, 4_000)
-
-      return newUpload
-    }
-    // TODO: real multipart upload
-    // const form = new FormData(); form.append('file', file)
-    // return apiClient.post('/api/ocr/upload', form, { headers: { 'Content-Type': 'multipart/form-data' } })
-  },
-
-  // Delete an upload
-  async deleteLeakUpload(id) {
-    if (USE_MOCK) {
-      await delay(200)
-      _uploads = _uploads.filter(u => u.id !== id)
-      delete _questions[id]
-      return { success: true }
-    }
-    // TODO: return apiClient.delete(`/api/ocr/uploads/${id}`)
-  },
+  return body;
 }
 
-const delay = (ms) => new Promise(r => setTimeout(r, ms))
+export const leakService = {
+  async getLeakUploads() {
+    const data = await apiRequest('/api/leaks');
+
+    if (!Array.isArray(data)) {
+      throw new Error('Invalid upload history response.');
+    }
+
+    return data;
+  },
+
+  async getLeakUpload(id) {
+    const [upload, questions] = await Promise.all([
+      apiRequest(`/api/leaks/${encodeURIComponent(id)}`),
+      apiRequest(`/api/leaks/${encodeURIComponent(id)}/questions`),
+    ]);
+
+    return {
+      ...upload,
+      extracted_questions: Array.isArray(questions) ? questions : [],
+    };
+  },
+
+  async uploadLeak(file) {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const response = await apiRequest('/api/leaks/upload', {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!response.upload?.id) {
+      throw new Error('Backend did not return a valid upload ID.');
+    }
+
+    const result = response.result || {};
+
+    return {
+      ...response.upload,
+      filename: response.upload.filename || file.name,
+      file_type: file.name.split('.').pop()?.toLowerCase() || 'unknown',
+      file_size_bytes: file.size,
+      status: 'EXTRACTED',
+      total_pages: result.pages?.length || 1,
+      processing_warnings: result.warnings || [],
+      extracted_questions: result.questions || [],
+      created_at: new Date().toISOString(),
+    };
+  },
+
+  async deleteLeakUpload() {
+    throw new Error(
+      'Delete upload is not yet supported by the backend.'
+    );
+  },
+};
