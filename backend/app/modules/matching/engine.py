@@ -78,19 +78,23 @@ def calculate_match_score(leaked_questions, official_paper_versions):
                 matched_count += 1
                 total_score += best_question_score
 
+        avg_score = (
+    total_score / len(official_questions)
+    if official_questions and matched_count > 0
+    else 0
+)
+
         if matched_count > 0:
-            avg_score = total_score / len(official_questions) if official_questions else 0
-            
-            if "Question wording matches" not in evidence_list and matched_count > 0:
+            if "Question wording matches" not in evidence_list:
                 evidence_list.append("Question wording matches")
 
-            candidates_scores.append({
-                "paper_version_id": version_id,
-                "centre_id": centre_id,
-                "similarity_score": round(min(avg_score, 100.0), 2),
-                "matched_questions": matched_count,
-                "evidence": evidence_list
-            })
+        candidates_scores.append({
+            "paper_version_id": version_id,
+            "centre_id": centre_id,
+            "similarity_score": round(min(avg_score, 100.0), 2),
+            "matched_questions": matched_count,
+            "evidence": evidence_list
+        })
 
     # Sort candidates by similarity score descending
     candidates_scores = sorted(candidates_scores, key=lambda x: x["similarity_score"], reverse=True)

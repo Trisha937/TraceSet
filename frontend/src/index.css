@@ -1,0 +1,146 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─── Base Reset ─────────────────────────────────────────────────────────── */
+@layer base {
+  *, *::before, *::after {
+    box-sizing: border-box;
+  }
+
+  html, body, #root {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    background-color: #000000;
+    color: #FFFFFF;
+    font-family: 'Sora', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  #root {
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: #000000; }
+  ::-webkit-scrollbar-thumb { background: #222222; border-radius: 2px; }
+  ::-webkit-scrollbar-thumb:hover { background: #333333; }
+
+  /* Selection */
+  ::selection { background: rgba(0,212,255,0.2); color: #ffffff; }
+
+  /* Focus visible */
+  :focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(0, 212, 255, 0.4);
+    border-radius: 4px;
+  }
+}
+
+/* ─── Component Utilities ────────────────────────────────────────────────── */
+@layer components {
+  /* Card surface */
+  .ts-card {
+    @apply bg-ts-surface border border-ts-border rounded-ts;
+  }
+
+  /* Subtle section divider */
+  .ts-divider {
+    @apply border-t border-ts-border;
+  }
+
+  /* Mono label (IDs, codes, numbers) */
+  .ts-mono {
+    font-family: 'JetBrains Mono', monospace;
+    @apply text-ts-code;
+  }
+
+  /* Uppercase tracking label */
+  .ts-label {
+    font-family: 'JetBrains Mono', monospace;
+    @apply text-xs2 text-ts-muted uppercase tracking-widest;
+  }
+
+  /* Page content wrapper */
+  .ts-page {
+    @apply flex flex-col h-full bg-ts-base;
+  }
+
+  /* Page scrollable body */
+  .ts-page-body {
+    @apply flex-1 overflow-y-auto px-8 py-6;
+  }
+}
+
+/* ─── Animations ─────────────────────────────────────────────────────────── */
+@layer utilities {
+  /* Staggered children fade */
+  .stagger-children > * {
+    animation: slideUp 400ms cubic-bezier(0.16,1,0.3,1) both;
+  }
+  .stagger-children > *:nth-child(1) { animation-delay: 0ms; }
+  .stagger-children > *:nth-child(2) { animation-delay: 60ms; }
+  .stagger-children > *:nth-child(3) { animation-delay: 120ms; }
+  .stagger-children > *:nth-child(4) { animation-delay: 180ms; }
+  .stagger-children > *:nth-child(5) { animation-delay: 240ms; }
+
+  /* Pulsing status dot */
+  .status-dot-active {
+    animation: pulseDot 1.4s ease-in-out infinite;
+  }
+
+  /* Sidebar active indicator */
+  .nav-active::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: #00D4FF;
+    border-radius: 0 2px 2px 0;
+  }
+}
+
+/* ─── Keyframes ──────────────────────────────────────────────────────────── */
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes slideRight {
+  from { opacity: 0; transform: translateX(16px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes pulseDot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.4; transform: scale(0.75); }
+}
+@keyframes progressFill {
+  from { width: 0%; }
+  to   { width: var(--target-width); }
+}
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* ─── Loading skeleton ───────────────────────────────────────────────────── */
+.skeleton {
+  background: linear-gradient(90deg, #111 25%, #1a1a1a 50%, #111 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 4px;
+}

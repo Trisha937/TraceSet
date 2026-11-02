@@ -2,6 +2,8 @@
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
+from pathlib import Path
+from backend.app.modules.ocr.config import UPLOAD_DIR
 
 from backend.app.database import get_db
 from backend.app.modules.ocr.exceptions import (
@@ -184,7 +186,46 @@ def list_leak_uploads(db: Session = Depends(get_db)):
         for item in list_uploads(db)
     ]
 
+@router.delete("/{upload_id}")
+def delete_leak_upload(
+    upload_id: str,
+    db: Session = Depends(get_db),
+):
+    upload = get_upload(db, upload_id)
 
+    if upload is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Upload not found.",
+        )
+
+    stored_path = upload.file_path
+
+    try:
+        db.delete(upload)
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Unable to delete upload.",
+        )
+
+    if stored_path:
+        upload_dir = Path(UPLOAD_DIR).resolve()
+        file_path = Path(stored_path).resolve()
+
+        if file_path.is_relative_to(upload_dir):
+            try:
+                file_path.unlink(missing_ok=True)
+            except OSError:
+                pass
+
+    return {
+        "success": True,
+        "message": "Upload deleted successfully.",
+        "upload_id": upload_id,
+    }
 @router.get("/{upload_id}")
 def get_leak_upload(
     upload_id: str,

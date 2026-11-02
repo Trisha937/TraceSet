@@ -32,12 +32,14 @@ HEADING_OR_INSTRUCTION_PATTERN = re.compile(
 )
 
 
+
 def _is_heading_or_instruction(text: str) -> bool:
     if not text or not text.strip():
         return False
 
     normalized = text.strip()
 
+    # Section headings and general instructions
     if re.match(
         r"^(?:section|part|chapter|instruction|instructions|note|notes)\b",
         normalized,
@@ -45,8 +47,32 @@ def _is_heading_or_instruction(text: str) -> bool:
     ):
         return True
 
-    if re.search(
-        r"(?:consists of|mark each|questions? of|choose the correct|select the correct|answer all)",
+    # Examination instructions that must not be parsed as questions
+    instruction_patterns = [
+        r"each question carries",
+        r"each question is worth",
+        r"select one option",
+        r"choose one option",
+        r"choose the correct",
+        r"select the correct",
+        r"answer all",
+        r"attempt all",
+        r"mark each",
+        r"questions of",
+        r"consists of",
+        r"no calculators allowed",
+        r"select the most appropriate option",
+    ]
+
+    if any(
+        re.search(pattern, normalized, flags=re.IGNORECASE)
+        for pattern in instruction_patterns
+    ):
+        return True
+
+    # Paper-ending text
+    if re.match(
+        r"^(?:end of|end)\s+(?:the\s+)?(?:sample\s+)?paper\b",
         normalized,
         flags=re.IGNORECASE,
     ):
@@ -382,6 +408,13 @@ def _parse_option_matches(
 
 def parse_mcq_questions(text: str) -> List[Dict[str, Any]]:
     cleaned = clean_text(text)
+
+    # Separate inline question labels before parsing.
+    cleaned = re.sub(
+        r'(?i)(?<!^)(?<!\n)\s+(?=Q(?:UESTION)?\s*\d+\s*[.):])',
+        '\n',
+        cleaned,
+    )
     lines = [
         line.strip()
         for line in cleaned.splitlines()
