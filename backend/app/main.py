@@ -5,6 +5,7 @@ from backend.app.database import engine, Base
 from backend.app.routes.paper_routes import router as paper_router
 from backend.app.modules.ocr.routes import router as ocr_router
 from backend.app.modules.matching.routes import router as matching_router
+from sample_data.seed_database import seed_database
 
 import backend.app.models  # Ensure all SQLAlchemy models are registered
 
@@ -33,6 +34,15 @@ app.add_middleware(
 app.include_router(paper_router)
 app.include_router(ocr_router)
 app.include_router(matching_router)
+
+
+@app.on_event("startup")
+def startup_init_database():
+    """Ensure database tables and sample data are automatically provisioned on startup."""
+    try:
+        seed_database()
+    except Exception as e:
+        print(f"Notice during automatic database initialization: {e}")
 
 
 @app.get("/api/health", tags=["Health"])
