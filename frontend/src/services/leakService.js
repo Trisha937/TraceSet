@@ -1,11 +1,10 @@
-
 /**
  * leakService.js
  * Real OCR / Leak Upload API integration
  */
 
 const API_BASE_URL = (
-  import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000'
+  import.meta.env.VITE_API_BASE_URL || 'https://traceset.onrender.com'
 ).replace(/\/$/, '');
 
 async function apiRequest(url, options = {}) {
@@ -80,8 +79,8 @@ export const leakService = {
   },
 
   async deleteLeakUpload(uploadId) {
-  return apiRequest(`/api/leaks/${uploadId}`, {
-    method: 'DELETE',
-  });
-},
+    return apiRequest(`/api/leaks/${uploadId}`, {
+      method: 'DELETE',
+    });
+  },
 };
