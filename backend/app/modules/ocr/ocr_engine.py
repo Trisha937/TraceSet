@@ -24,12 +24,14 @@ def _get_easyocr_reader():
         import easyocr
         cache_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "..", "..", ".easyocr_cache"))
         os.makedirs(cache_dir, exist_ok=True)
+        craft_file = os.path.join(cache_dir, "craft_mlt_25k.pth")
+        can_download = not os.path.exists(craft_file)
         _easyocr_reader = easyocr.Reader(
             ["en"],
             gpu=False,
             model_storage_directory=cache_dir,
             user_network_directory=cache_dir,
-            download_enabled=False
+            download_enabled=can_download
         )
     return _easyocr_reader
 
