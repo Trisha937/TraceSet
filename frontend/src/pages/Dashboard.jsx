@@ -1,7 +1,7 @@
+
 /**
  * Dashboard.jsx — Overview: stats, recent uploads, module status
- * Connects to real Member 1 backend for paper/centre counts.
- * Uses mock data for leak upload counts and analysis stats.
+ * Connects to the real backend for paper, centre and leak upload data.
  */
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -19,7 +19,12 @@ import { leakService } from '../services/leakService'
 
 function formatDate(iso) {
   if (!iso) return '—'
-  return new Date(iso).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
+
+  return new Date(iso).toLocaleDateString('en-IN', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric'
+  })
 }
 
 export default function Dashboard() {
@@ -34,6 +39,7 @@ export default function Dashboard() {
   useEffect(() => {
     async function load() {
       setLoading(true)
+
       try {
         const [h, v, c, u] = await Promise.allSettled([
           getHealth(),
@@ -54,33 +60,58 @@ export default function Dashboard() {
         setLoading(false)
       }
     }
+
     load()
   }, [])
 
-  const analysedCount = uploads.filter(u => u.status === 'EXTRACTED').length
+  const analysedCount = uploads.filter(
+    u => u.status === 'EXTRACTED'
+  ).length
+
   const modules = health?.modules || {}
 
   return (
     <div className="ts-page">
       <Topbar
         title="Dashboard"
-        subtitle={`TraceSet Forensic Intelligence Platform · ${new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}`}
+        subtitle={`TraceSet Forensic Intelligence Platform · ${new Date().toLocaleDateString('en-IN', {
+          weekday: 'long',
+          day: 'numeric',
+          month: 'long',
+          year: 'numeric'
+        })}`}
       />
 
       <div className="ts-page-body">
-        {/* ── Error Banner ──────────────────────────────────────────────── */}
+
+        {/* Error Banner */}
         {error && !loading && (
           <div
             className="flex items-start gap-3 px-4 py-3 mb-6 rounded-ts"
-            style={{ background: '#1A0A00', border: '1px solid #F5A62333', borderLeft: '3px solid #F5A623' }}
+            style={{
+              background: '#1A0A00',
+              border: '1px solid #F5A62333',
+              borderLeft: '3px solid #F5A623'
+            }}
           >
-            <AlertTriangle size={15} className="text-ts-amber shrink-0 mt-0.5" />
-            <p className="font-sora text-ts-secondary" style={{ fontSize: 13 }}>{error}</p>
+            <AlertTriangle
+              size={15}
+              className="text-ts-amber shrink-0 mt-0.5"
+            />
+            <p
+              className="font-sora text-ts-secondary"
+              style={{ fontSize: 13 }}
+            >
+              {error}
+            </p>
           </div>
         )}
 
-        {/* ── Stat Cards ────────────────────────────────────────────────── */}
-        <div className="grid gap-4 mb-8 stagger-children" style={{ gridTemplateColumns: 'repeat(4, 1fr)' }}>
+        {/* Statistics Cards */}
+        <div
+          className="grid gap-4 mb-8 stagger-children"
+          style={{ gridTemplateColumns: 'repeat(4, 1fr)' }}
+        >
           <StatCard
             label="Paper Versions"
             value={loading ? 0 : versions.length}
@@ -88,18 +119,21 @@ export default function Dashboard() {
             loading={loading}
             accent
           />
+
           <StatCard
             label="Active Centres"
             value={loading ? 0 : centres.length}
             icon={MapPin}
             loading={loading}
           />
+
           <StatCard
             label="Leak Uploads"
             value={loading ? 0 : uploads.length}
             icon={Upload}
             loading={loading}
           />
+
           <StatCard
             label="Analysed"
             value={loading ? 0 : analysedCount}
@@ -108,8 +142,11 @@ export default function Dashboard() {
           />
         </div>
 
-        {/* ── Two-column body ───────────────────────────────────────────── */}
-        <div className="grid gap-6" style={{ gridTemplateColumns: '1.6fr 1fr' }}>
+        {/* Main Dashboard Content */}
+        <div
+          className="grid gap-6"
+          style={{ gridTemplateColumns: '1.6fr 1fr' }}
+        >
 
           {/* LEFT — Recent Uploads */}
           <div>
@@ -118,6 +155,7 @@ export default function Dashboard() {
               action={() => navigate('/upload')}
               actionLabel="Manage Uploads →"
             />
+
             <div className="ts-card overflow-hidden">
               <table className="w-full border-collapse">
                 <thead>
@@ -126,27 +164,41 @@ export default function Dashboard() {
                       <th
                         key={h}
                         className="text-left px-4 py-3 font-mono text-ts-muted uppercase"
-                        style={{ fontSize: 10, letterSpacing: '0.06em' }}
+                        style={{
+                          fontSize: 10,
+                          letterSpacing: '0.06em'
+                        }}
                       >
                         {h}
                       </th>
                     ))}
                   </tr>
                 </thead>
+
                 <tbody>
                   {loading ? (
                     Array.from({ length: 3 }).map((_, i) => (
-                      <tr key={i} className="border-b border-ts-border">
+                      <tr
+                        key={i}
+                        className="border-b border-ts-border"
+                      >
                         {[80, 40, 60, 70].map((w, j) => (
                           <td key={j} className="px-4 py-3">
-                            <div className="skeleton h-3 rounded" style={{ width: `${w}%` }} />
+                            <div
+                              className="skeleton h-3 rounded"
+                              style={{ width: `${w}%` }}
+                            />
                           </td>
                         ))}
                       </tr>
                     ))
                   ) : uploads.length === 0 ? (
                     <tr>
-                      <td colSpan={4} className="px-4 py-8 text-center font-mono text-ts-muted" style={{ fontSize: 12 }}>
+                      <td
+                        colSpan={4}
+                        className="px-4 py-8 text-center font-mono text-ts-muted"
+                        style={{ fontSize: 12 }}
+                      >
                         No uploads yet. Go to Leak Upload to add files.
                       </td>
                     </tr>
@@ -157,16 +209,30 @@ export default function Dashboard() {
                         className="border-b border-ts-border hover:bg-ts-elevated transition-colors cursor-pointer"
                         onClick={() => navigate('/upload')}
                       >
-                        <td className="px-4 py-3 font-sora text-ts-secondary" style={{ fontSize: 13 }}>
-                          <span className="truncate block max-w-xs">{upload.filename}</span>
+                        <td
+                          className="px-4 py-3 font-sora text-ts-secondary"
+                          style={{ fontSize: 13 }}
+                        >
+                          <span className="truncate block max-w-xs">
+                            {upload.filename}
+                          </span>
                         </td>
-                        <td className="px-4 py-3 font-mono text-ts-muted" style={{ fontSize: 11 }}>
+
+                        <td
+                          className="px-4 py-3 font-mono text-ts-muted"
+                          style={{ fontSize: 11 }}
+                        >
                           {upload.file_type?.split('/')[1]?.toUpperCase() || '—'}
                         </td>
+
                         <td className="px-4 py-3">
                           <StatusBadge status={upload.status} />
                         </td>
-                        <td className="px-4 py-3 font-mono text-ts-muted" style={{ fontSize: 11 }}>
+
+                        <td
+                          className="px-4 py-3 font-mono text-ts-muted"
+                          style={{ fontSize: 11 }}
+                        >
                           {formatDate(upload.created_at)}
                         </td>
                       </tr>
@@ -177,37 +243,16 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* RIGHT — Module Status */}
+          {/* RIGHT — System Modules */}
           <div>
             <SectionHeader label="System Modules" />
-            <ModuleStatusPanel modules={modules} loading={loading} />
 
-            {/* Exam info strip */}
-            {!loading && (
-              <div
-                className="mt-4 px-4 py-3 rounded-ts space-y-2"
-                style={{ background: '#0A0A0A', border: '1px solid #222' }}
-              >
-                <p className="ts-label mb-2">Environment</p>
-                <div className="flex items-center justify-between">
-                  <span className="font-mono text-ts-muted" style={{ fontSize: 11 }}>Backend</span>
-                  <span className="font-mono text-ts-code" style={{ fontSize: 11 }}>localhost:8000</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="font-mono text-ts-muted" style={{ fontSize: 11 }}>Frontend</span>
-                  <span className="font-mono text-ts-code" style={{ fontSize: 11 }}>localhost:3000</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="font-mono text-ts-muted" style={{ fontSize: 11 }}>OCR Mode</span>
-                  <span className="font-mono text-ts-amber" style={{ fontSize: 11 }}>MOCK</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="font-mono text-ts-muted" style={{ fontSize: 11 }}>Matching Mode</span>
-                  <span className="font-mono text-ts-amber" style={{ fontSize: 11 }}>MOCK</span>
-                </div>
-              </div>
-            )}
+            <ModuleStatusPanel
+              modules={modules}
+              loading={loading}
+            />
           </div>
+
         </div>
       </div>
     </div>
