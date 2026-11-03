@@ -129,9 +129,9 @@ export default function LeakUpload() {
   async function handleUpload(file) {
     setUploading(true)
     try {
-      const newUpload = await leakService.uploadLeak(file)
-      setUploads(prev => [newUpload, ...prev])
-      toast.success(`"${file.name}" uploaded successfully. OCR processing started.`)
+      await leakService.uploadLeak(file)
+      await refresh(true)
+      toast.success(`"${file.name}" uploaded successfully and extracted.`)
       setShowDropzone(false)
     } catch (err) {
       toast.error(err.message || 'Upload failed. Please try again.')

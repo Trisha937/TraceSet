@@ -55,7 +55,11 @@ def health_check():
             "paper_generation": "ONLINE",
             "ocr_extraction": "ONLINE",
             "ai_matching": "ONLINE",
-            "dashboard_ui": "ONLINE"
+            "dashboard_ui": "ONLINE",
+            "member_1_paper_generation": "ONLINE",
+            "member_2_ocr_extraction": "ONLINE",
+            "member_3_ai_matching": "ONLINE",
+            "member_4_frontend": "ONLINE",
         }
     }
 
