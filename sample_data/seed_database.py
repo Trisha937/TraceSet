@@ -105,9 +105,9 @@ def seed_database():
                 "Skipping generation."
             )
 
-        # 5. Pre-seed demo leak upload if none exist
-        existing_leaks = db.query(LeakUpload).count()
-        if existing_leaks == 0:
+        # 5. Pre-seed or refresh demo leak upload
+        existing_leak = db.query(LeakUpload).filter_by(filename="leak_centre_B_mumbai.pdf").first()
+        if existing_leak is None:
             demo_upload = LeakUpload(
                 id=str(uuid.uuid4()),
                 filename="leak_centre_B_mumbai.pdf",
@@ -121,52 +121,72 @@ def seed_database():
             db.add(demo_upload)
             db.commit()
             db.refresh(demo_upload)
-
-            q1 = ExtractedQuestion(
-                id=str(uuid.uuid4()),
-                upload_id=demo_upload.id,
-                detected_question_number=1,
-                detected_order=1,
-                extracted_text="Which layer of the OSI model does the IP protocol operate on?",
-                cleaned_text="Which layer of the OSI model does the IP protocol operate on?",
-                options={"A": "Network", "B": "Transport", "C": "Data Link", "D": "Application"},
-                detected_option_order=["A", "B", "C", "D"],
-                page_number=1,
-                extraction_quality="HIGH",
-                is_partial="NO",
-                warnings=[]
-            )
-            q2 = ExtractedQuestion(
-                id=str(uuid.uuid4()),
-                upload_id=demo_upload.id,
-                detected_question_number=2,
-                detected_order=2,
-                extracted_text="What is the time complexity of searching in a balanced Binary Search Tree?",
-                cleaned_text="What is the time complexity of searching in a balanced Binary Search Tree?",
-                options={"A": "O(n)", "B": "O(log n)", "C": "O(1)", "D": "O(n^2)"},
-                detected_option_order=["A", "B", "C", "D"],
-                page_number=1,
-                extraction_quality="HIGH",
-                is_partial="NO",
-                warnings=[]
-            )
-            q3 = ExtractedQuestion(
-                id=str(uuid.uuid4()),
-                upload_id=demo_upload.id,
-                detected_question_number=3,
-                detected_order=3,
-                extracted_text="Which of the following is an immutable data type in Python?",
-                cleaned_text="Which of the following is an immutable data type in Python?",
-                options={"A": "List", "B": "Tuple", "C": "Dictionary", "D": "Set"},
-                detected_option_order=["A", "B", "C", "D"],
-                page_number=1,
-                extraction_quality="HIGH",
-                is_partial="NO",
-                warnings=[]
-            )
-            db.add_all([q1, q2, q3])
+        else:
+            demo_upload = existing_leak
+            db.query(ExtractedQuestion).filter_by(upload_id=demo_upload.id).delete()
             db.commit()
-            print("Pre-seeded demo leak upload: leak_centre_B_mumbai.pdf")
+
+        # Seed questions matching Centre B (SET_B) forensic fingerprints
+        q1 = ExtractedQuestion(
+            id=str(uuid.uuid4()),
+            upload_id=demo_upload.id,
+            detected_question_number=1,
+            detected_order=1,
+            extracted_text="Which optimization objective defines the principal components in PCA?",
+            cleaned_text="Which optimization objective defines the principal components in PCA?",
+            options={
+                "A": "Maximizing variance of projected data points onto orthogonal eigenvectors",
+                "B": "Maximizing the margin between distinct class boundaries",
+                "C": "Minimizing the L1 norm of the sparse feature representation",
+                "D": "Minimizing the cross-entropy loss between latent classes"
+            },
+            detected_option_order=["A", "B", "C", "D"],
+            page_number=1,
+            extraction_quality="HIGH",
+            is_partial="NO",
+            warnings=[]
+        )
+        q2 = ExtractedQuestion(
+            id=str(uuid.uuid4()),
+            upload_id=demo_upload.id,
+            detected_question_number=2,
+            detected_order=2,
+            extracted_text="To guarantee finding the optimal path in A* tree search, what property must the heuristic h(n) possess?",
+            cleaned_text="To guarantee finding the optimal path in A* tree search, what property must the heuristic h(n) possess?",
+            options={
+                "A": "Strict positivity: h(n) must always be greater than zero for all nodes",
+                "B": "Monotonicity: h(n) must monotonically increase along all search paths",
+                "C": "Consistency: h(n) <= c(n, a, n') + h(n')",
+                "D": "Admissibility: h(n) must never overestimate the true cost to reach the goal"
+            },
+            detected_option_order=["A", "B", "C", "D"],
+            page_number=1,
+            extraction_quality="HIGH",
+            is_partial="NO",
+            warnings=[]
+        )
+        q3 = ExtractedQuestion(
+            id=str(uuid.uuid4()),
+            upload_id=demo_upload.id,
+            detected_question_number=3,
+            detected_order=3,
+            extracted_text="In deep architectures, what is the underlying cause of the vanishing gradient phenomenon?",
+            cleaned_text="In deep architectures, what is the underlying cause of the vanishing gradient phenomenon?",
+            options={
+                "A": "Initializing weights with excessively high random variance",
+                "B": "Repeated multiplication of small derivatives through many hidden layers with saturating activations",
+                "C": "Using an excessively large learning rate in stochastic gradient descent",
+                "D": "Applying L2 weight decay regularization to convolutional layers"
+            },
+            detected_option_order=["A", "B", "C", "D"],
+            page_number=1,
+            extraction_quality="HIGH",
+            is_partial="NO",
+            warnings=[]
+        )
+        db.add_all([q1, q2, q3])
+        db.commit()
+        print("Configured demo leak questions matching Centre B fingerprints.")
 
         print("\nSample database setup completed.")
 

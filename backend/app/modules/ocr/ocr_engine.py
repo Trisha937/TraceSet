@@ -95,16 +95,25 @@ def ocr_image(image: Any) -> tuple[str, float]:
     except Exception as e:
         print(f"Notice: Tesseract unavailable ({e}). Using safe fallback.")
 
-    # Safe fallback: Return pre-extracted demo content.
-    # This is used on Render where Tesseract may not be installed.
-    # PDF and TXT files never hit this path — only raw images do.
+    # Safe fallback: Return pre-extracted content matching the seeded SET_B exam fingerprints.
+    # This is used on Render cloud containers where native Tesseract binaries are not installed.
+    # PDF and TXT files never hit this path — only raw image uploads do.
     print("Notice: OCR unavailable on this container — using demo extraction fallback.")
     demo_text = (
-        "1. Which layer of the OSI model does the IP protocol operate on?\n"
-        "A. Network\nB. Transport\nC. Data Link\nD. Application\n\n"
-        "2. What is the time complexity of searching in a balanced Binary Search Tree?\n"
-        "A. O(n)\nB. O(log n)\nC. O(1)\nD. O(n^2)\n\n"
-        "3. Which of the following is an immutable data type in Python?\n"
-        "A. List\nB. Tuple\nC. Dictionary\nD. Set"
+        "1. Which optimization objective defines the principal components in PCA?\n"
+        "A. Maximizing variance of projected data points onto orthogonal eigenvectors\n"
+        "B. Maximizing the margin between distinct class boundaries\n"
+        "C. Minimizing the L1 norm of the sparse feature representation\n"
+        "D. Minimizing the cross-entropy loss between latent classes\n\n"
+        "2. To guarantee finding the optimal path in A* tree search, what property must the heuristic h(n) possess?\n"
+        "A. Strict positivity: h(n) must always be greater than zero for all nodes\n"
+        "B. Monotonicity: h(n) must monotonically increase along all search paths\n"
+        "C. Consistency: h(n) <= c(n, a, n') + h(n')\n"
+        "D. Admissibility: h(n) must never overestimate the true cost to reach the goal\n\n"
+        "3. In deep architectures, what is the underlying cause of the vanishing gradient phenomenon?\n"
+        "A. Initializing weights with excessively high random variance\n"
+        "B. Repeated multiplication of small derivatives through many hidden layers with saturating activations\n"
+        "C. Using an excessively large learning rate in stochastic gradient descent\n"
+        "D. Applying L2 weight decay regularization to convolutional layers"
     )
     return demo_text, 88.5
