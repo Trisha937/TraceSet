@@ -105,88 +105,152 @@ def seed_database():
                 "Skipping generation."
             )
 
-        # 5. Pre-seed or refresh demo leak upload
-        existing_leak = db.query(LeakUpload).filter_by(filename="leak_centre_B_mumbai.pdf").first()
-        if existing_leak is None:
-            demo_upload = LeakUpload(
-                id=str(uuid.uuid4()),
-                filename="leak_centre_B_mumbai.pdf",
-                file_path="sample_data/demo_leaks/leak_centre_B_mumbai.pdf",
-                file_type="pdf",
-                file_size_bytes=2671,
-                total_pages=1,
-                status="EXTRACTED",
-                processing_warnings=[]
-            )
-            db.add(demo_upload)
-            db.commit()
-            db.refresh(demo_upload)
-        else:
-            demo_upload = existing_leak
-            db.query(ExtractedQuestion).filter_by(upload_id=demo_upload.id).delete()
-            db.commit()
+        # 5. Pre-seed and heal demo leak uploads in PostgreSQL
+        demo_files = [
+            ("leak_centre_B_mumbai.pdf", "pdf", 2671, "full"),
+            ("leak_photo_incomplete.png", "png", 47535, "incomplete"),
+            ("leak_photo_mumbai_blurry.png", "png", 454126, "blurry"),
+            ("leak_photo_mumbai_clean.png", "png", 126332, "full"),
+            ("leak_centre_B_mumbai.txt", "txt", 1189, "full"),
+            ("leak_insufficient_evidence.txt", "txt", 202, "insufficient"),
+        ]
 
-        # Seed questions matching Centre B (SET_B) forensic fingerprints
-        q1 = ExtractedQuestion(
-            id=str(uuid.uuid4()),
-            upload_id=demo_upload.id,
-            detected_question_number=1,
-            detected_order=1,
-            extracted_text="Which optimization objective defines the principal components in PCA?",
-            cleaned_text="Which optimization objective defines the principal components in PCA?",
-            options={
-                "A": "Maximizing variance of projected data points onto orthogonal eigenvectors",
-                "B": "Maximizing the margin between distinct class boundaries",
-                "C": "Minimizing the L1 norm of the sparse feature representation",
-                "D": "Minimizing the cross-entropy loss between latent classes"
-            },
-            detected_option_order=["A", "B", "C", "D"],
-            page_number=1,
-            extraction_quality="HIGH",
-            is_partial="NO",
-            warnings=[]
-        )
-        q2 = ExtractedQuestion(
-            id=str(uuid.uuid4()),
-            upload_id=demo_upload.id,
-            detected_question_number=2,
-            detected_order=2,
-            extracted_text="To guarantee finding the optimal path in A* tree search, what property must the heuristic h(n) possess?",
-            cleaned_text="To guarantee finding the optimal path in A* tree search, what property must the heuristic h(n) possess?",
-            options={
-                "A": "Strict positivity: h(n) must always be greater than zero for all nodes",
-                "B": "Monotonicity: h(n) must monotonically increase along all search paths",
-                "C": "Consistency: h(n) <= c(n, a, n') + h(n')",
-                "D": "Admissibility: h(n) must never overestimate the true cost to reach the goal"
-            },
-            detected_option_order=["A", "B", "C", "D"],
-            page_number=1,
-            extraction_quality="HIGH",
-            is_partial="NO",
-            warnings=[]
-        )
-        q3 = ExtractedQuestion(
-            id=str(uuid.uuid4()),
-            upload_id=demo_upload.id,
-            detected_question_number=3,
-            detected_order=3,
-            extracted_text="In deep architectures, what is the underlying cause of the vanishing gradient phenomenon?",
-            cleaned_text="In deep architectures, what is the underlying cause of the vanishing gradient phenomenon?",
-            options={
-                "A": "Initializing weights with excessively high random variance",
-                "B": "Repeated multiplication of small derivatives through many hidden layers with saturating activations",
-                "C": "Using an excessively large learning rate in stochastic gradient descent",
-                "D": "Applying L2 weight decay regularization to convolutional layers"
-            },
-            detected_option_order=["A", "B", "C", "D"],
-            page_number=1,
-            extraction_quality="HIGH",
-            is_partial="NO",
-            warnings=[]
-        )
-        db.add_all([q1, q2, q3])
-        db.commit()
-        print("Configured demo leak questions matching Centre B fingerprints.")
+        def get_demo_questions_for_mode(upload_id_val, mode):
+            q_pca = ExtractedQuestion(
+                id=str(uuid.uuid4()),
+                upload_id=upload_id_val,
+                detected_question_number=1,
+                detected_order=1,
+                extracted_text="Which optimization objective defines the principal components in PCA?",
+                cleaned_text="Which optimization objective defines the principal components in PCA?",
+                options={
+                    "A": "Maximizing variance of projected data points onto orthogonal eigenvectors",
+                    "B": "Maximizing the margin between distinct class boundaries",
+                    "C": "Minimizing the L1 norm of the sparse feature representation",
+                    "D": "Minimizing the cross-entropy loss between latent classes"
+                },
+                detected_option_order=["A", "B", "C", "D"],
+                page_number=1,
+                extraction_quality="HIGH",
+                is_partial="NO",
+                warnings=[]
+            )
+            q_astar = ExtractedQuestion(
+                id=str(uuid.uuid4()),
+                upload_id=upload_id_val,
+                detected_question_number=2 if mode != "blurry" else 1,
+                detected_order=2 if mode != "blurry" else 1,
+                extracted_text="To guarantee finding the optimal path in A* tree search, what property must the heuristic h(n) possess?",
+                cleaned_text="To guarantee finding the optimal path in A* tree search, what property must the heuristic h(n) possess?",
+                options={
+                    "A": "Strict positivity: h(n) must always be greater than zero for all nodes",
+                    "B": "Monotonicity: h(n) must monotonically increase along all search paths",
+                    "C": "Consistency: h(n) <= c(n, a, n') + h(n')",
+                    "D": "Admissibility: h(n) must never overestimate the true cost to reach the goal"
+                },
+                detected_option_order=["A", "B", "C", "D"],
+                page_number=1,
+                extraction_quality="MEDIUM" if mode == "blurry" else "HIGH",
+                is_partial="NO",
+                warnings=["Low OCR contrast detected; calibrated matching enabled"] if mode == "blurry" else []
+            )
+            q_gradient = ExtractedQuestion(
+                id=str(uuid.uuid4()),
+                upload_id=upload_id_val,
+                detected_question_number=3,
+                detected_order=3,
+                extracted_text="In deep architectures, what is the underlying cause of the vanishing gradient phenomenon?",
+                cleaned_text="In deep architectures, what is the underlying cause of the vanishing gradient phenomenon?",
+                options={
+                    "A": "Initializing weights with excessively high random variance",
+                    "B": "Repeated multiplication of small derivatives through many hidden layers with saturating activations",
+                    "C": "Using an excessively large learning rate in stochastic gradient descent",
+                    "D": "Applying L2 weight decay regularization to convolutional layers"
+                },
+                detected_option_order=["A", "B", "C", "D"],
+                page_number=1,
+                extraction_quality="HIGH",
+                is_partial="NO",
+                warnings=[]
+            )
+            q_insufficient = ExtractedQuestion(
+                id=str(uuid.uuid4()),
+                upload_id=upload_id_val,
+                detected_question_number=1,
+                detected_order=1,
+                extracted_text="What is machine learning in general context?",
+                cleaned_text="What is machine learning in general context?",
+                options={
+                    "A": "Artificial Intelligence branch",
+                    "B": "Hardware architecture",
+                    "C": "Compiler theory",
+                    "D": "Network routing protocol"
+                },
+                detected_option_order=["A", "B", "C", "D"],
+                page_number=1,
+                extraction_quality="LOW",
+                is_partial="YES",
+                warnings=["Fragment does not contain examination security markers"]
+            )
+
+            if mode == "blurry":
+                return [q_astar]
+            elif mode == "incomplete":
+                return [q_pca, q_astar]
+            elif mode == "insufficient":
+                return [q_insufficient]
+            else:
+                return [q_pca, q_astar, q_gradient]
+
+        # Scan ALL existing uploads in database and heal stale questions
+        all_uploads = db.query(LeakUpload).all()
+        for up in all_uploads:
+            fname = (up.filename or "").lower()
+            if "blurry" in fname:
+                m = "blurry"
+            elif "incomplete" in fname:
+                m = "incomplete"
+            elif "insufficient" in fname:
+                m = "insufficient"
+            elif "mumbai" in fname or "clean" in fname:
+                m = "full"
+            else:
+                continue
+
+            # Check if questions need healing (e.g. legacy OSI / BST questions or missing)
+            curr_qs = db.query(ExtractedQuestion).filter_by(upload_id=up.id).all()
+            is_stale = (
+                not curr_qs or
+                any("osi" in (q.extracted_text or "").lower() or "binary search" in (q.extracted_text or "").lower() for q in curr_qs)
+            )
+            if is_stale:
+                db.query(ExtractedQuestion).filter_by(upload_id=up.id).delete()
+                new_qs = get_demo_questions_for_mode(up.id, m)
+                db.add_all(new_qs)
+                db.commit()
+                print(f"Healed extracted questions for existing upload: {up.filename} ({up.id})")
+
+        # Also ensure standard demo leak entries exist
+        for fname, ftype, fsize, mode in demo_files:
+            existing = db.query(LeakUpload).filter_by(filename=fname).first()
+            if not existing:
+                demo_upload = LeakUpload(
+                    id=str(uuid.uuid4()),
+                    filename=fname,
+                    file_path=f"sample_data/demo_leaks/{fname}",
+                    file_type=ftype,
+                    file_size_bytes=fsize,
+                    total_pages=1,
+                    status="EXTRACTED",
+                    processing_warnings=[]
+                )
+                db.add(demo_upload)
+                db.commit()
+                db.refresh(demo_upload)
+                qs = get_demo_questions_for_mode(demo_upload.id, mode)
+                db.add_all(qs)
+                db.commit()
+                print(f"Created and seeded demo upload: {fname}")
 
         print("\nSample database setup completed.")
 

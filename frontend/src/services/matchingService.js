@@ -73,6 +73,9 @@ export const matchingService = {
     const officialPaperVersions = fingerprints.map(version => ({
       paper_version_id: version.paper_version_id || version.id,
       centre_id: version.centre_id,
+      centre_code: version.centre_code || '',
+      centre_name: version.centre_name || '',
+      version_code: version.version_code || '',
       questions: (version.fingerprints || []).map(fingerprint => ({
         question_text: fingerprint.variant_text || '',
         options: fingerprint.rendered_options || {},

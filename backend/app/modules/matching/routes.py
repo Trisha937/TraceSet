@@ -17,10 +17,23 @@ def analyze_leak(data: MatchRequest):
     API endpoint to process matching between extracted leak data and official fingerprints.
     """
     try:
+        fname = data.filename
+        if not fname and data.upload_id:
+            try:
+                from backend.app.database import SessionLocal
+                from backend.app.models.leak import LeakUpload
+                db_s = SessionLocal()
+                up = db_s.query(LeakUpload).filter_by(id=data.upload_id).first()
+                if up and up.filename:
+                    fname = up.filename
+                db_s.close()
+            except Exception:
+                pass
+
         result = calculate_match_score(
             data.leaked_questions,
             data.official_paper_versions,
-            filename=data.filename
+            filename=fname
         )
         return result
     except Exception as e:
