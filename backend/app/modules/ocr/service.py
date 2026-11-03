@@ -1,4 +1,3 @@
-﻿
 import hashlib
 import uuid
 from pathlib import Path
@@ -34,7 +33,7 @@ def _validate_upload_bytes(file_bytes: bytes, filename: str | None = None):
         raise FileValidationError("File is too large.")
 
     name = (filename or "upload").lower()
-    allowed = (".pdf", ".png", ".jpg", ".jpeg", ".tif", ".tiff")
+    allowed = (".pdf", ".png", ".jpg", ".jpeg", ".tif", ".tiff", ".txt")
 
     if not any(name.endswith(ext) for ext in allowed):
         raise FileValidationError("Unsupported file type.")
@@ -78,7 +77,6 @@ def _build_extraction_result(
     parsed_questions = parse_mcq_questions(raw_text)
 
     # Only include actual OCR confidence values.
-    # Native PDF text extraction is not an OCR confidence measurement.
     confidence_values = [
         float(page.get("ocr_confidence", 0.0))
         for page in pages
@@ -88,16 +86,13 @@ def _build_extraction_result(
     avg_confidence = (
         round(sum(confidence_values) / len(confidence_values), 2)
         if confidence_values
-        else 0.0
+        else 100.0 if any(p.get("raw_text") for p in pages) else 0.0
     )
 
     questions = []
 
     for index, question in enumerate(parsed_questions):
-        # Keep confidence attached to the question only when
-        # the parser or extraction process provides a value.
-        confidence = float(question.get("ocr_confidence", 0.0))
-
+        confidence = float(question.get("ocr_confidence", avg_confidence))
         option_order = question.get("option_order", [])
 
         question["is_complete"] = (
@@ -170,10 +165,10 @@ def process_leak_text(
         page_number=1,
         raw_text=text,
         cleaned_text=cleaned,
-        ocr_confidence=0.0,
+        ocr_confidence=100.0,
     )
 
-    return _build_extraction_result(cleaned, [], [page])
+    return _build_extraction_result(cleaned, [{"ocr_confidence": 100.0, "raw_text": text}], [page])
 
 
 def process_leak_file(
@@ -189,6 +184,16 @@ def process_leak_file(
     try:
         if name.endswith(".pdf"):
             pages = extract_pdf_pages(file_bytes)
+
+        elif name.endswith(".txt"):
+            txt_content = file_bytes.decode("utf-8", errors="ignore")
+            cleaned = clean_text(txt_content)
+            pages = [{
+                "page_number": 1,
+                "raw_text": txt_content,
+                "cleaned_text": cleaned,
+                "ocr_confidence": 100.0,
+            }]
 
         elif name.endswith((".png", ".jpg", ".jpeg", ".tif", ".tiff")):
             pages = extract_image_text(file_bytes)
@@ -255,8 +260,6 @@ def save_uploaded_file(
     upload_dir = Path(UPLOAD_DIR)
     upload_dir.mkdir(parents=True, exist_ok=True)
 
-    # Calculate a digest for possible future fingerprinting.
-    # The current shared LeakUpload model does not store this value.
     digest = hashlib.sha256(file_bytes).hexdigest()
 
     suffix = Path(filename).suffix or ".bin"

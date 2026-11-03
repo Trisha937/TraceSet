@@ -120,7 +120,7 @@ export default function Sidebar() {
           />
           <span className="font-mono text-ts-code" style={{ fontSize: 11 }}>
             {health === null && 'Checking…'}
-            {health === true  && 'API Online · :8000'}
+            {health === true  && 'API Online · Cloud'}
             {health === false && 'API Offline'}
           </span>
         </div>

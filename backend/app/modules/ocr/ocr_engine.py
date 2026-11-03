@@ -1,6 +1,7 @@
 import io
 import shutil
 import os
+import gc
 from typing import Any
 
 import cv2
@@ -74,6 +75,16 @@ def _image_to_numpy(image: Any):
 def ocr_image(image: Any) -> tuple[str, float]:
     image_array = _image_to_numpy(image)
 
+    # Memory Optimization for Cloud Hosting (512MB RAM):
+    # Downscale high-resolution images so max dimension is at most 700px.
+    # This prevents Out-Of-Memory (OOM) / 502 Bad Gateway crashes while retaining OCR readability.
+    h, w = image_array.shape[:2]
+    max_dim = max(h, w)
+    if max_dim > 700:
+        scale = 700.0 / max_dim
+        new_w, new_h = max(1, int(w * scale)), max(1, int(h * scale))
+        image_array = cv2.resize(image_array, (new_w, new_h), interpolation=cv2.INTER_AREA)
+
     # 1. Try Tesseract OCR if installed
     try:
         _configure_tesseract()
@@ -98,13 +109,17 @@ def ocr_image(image: Any) -> tuple[str, float]:
         return text.strip(), avg_conf
 
     except Exception:
-        # 2. Seamless Fallback to EasyOCR (specified in team plan)
+        # 2. Seamless Fallback to EasyOCR (optimized with inference_mode & gc)
         try:
-            reader = _get_easyocr_reader()
-            results = reader.readtext(image_array)
-            text_lines = [r[1] for r in results]
-            conf_values = [r[2] * 100 for r in results]
-            avg_conf = round(sum(conf_values) / len(conf_values), 2) if conf_values else 0.0
-            return "\n".join(text_lines), avg_conf
+            import torch
+            with torch.inference_mode():
+                reader = _get_easyocr_reader()
+                results = reader.readtext(image_array, batch_size=1, detail=1)
+                text_lines = [r[1] for r in results]
+                conf_values = [r[2] * 100 for r in results]
+                avg_conf = round(sum(conf_values) / len(conf_values), 2) if conf_values else 0.0
+                del results
+                gc.collect()
+                return "\n".join(text_lines), avg_conf
         except Exception as e:
             raise OCRUnavailableError(f"Both Tesseract and EasyOCR engines encountered an error: {e}")

@@ -324,7 +324,7 @@ export default function PaperManagement() {
     <div className="ts-page">
       <Topbar
         title="Paper Management"
-        subtitle="GET /api/papers/* — Live Member 1 Backend"
+        subtitle="Official examination papers, centre allocations, and cryptographic fingerprints"
         actions={
           <Button
             variant="ghost"

@@ -11,6 +11,7 @@ const ACCEPTED_TYPES = {
   'image/jpeg':      'JPG / JPEG',
   'image/jpg':       'JPG',
   'image/png':       'PNG',
+  'text/plain':      'TXT',
 }
 
 const MAX_SIZE_BYTES = 50 * 1024 * 1024 // 50MB
@@ -34,7 +35,7 @@ export default function FileDropzone({ onUpload, uploading = false }) {
 
   function validate(file) {
     if (!file) return 'No file selected.'
-    if (!ACCEPTED_TYPES[file.type]) return `Unsupported file type. Accepted: PDF, JPG, JPEG, PNG.`
+    if (!ACCEPTED_TYPES[file.type]) return `Unsupported file type. Accepted: PDF, JPG, JPEG, PNG, TXT.`
     if (file.size > MAX_SIZE_BYTES) return `File exceeds 50 MB limit.`
     return null
   }
