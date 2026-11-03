@@ -1,236 +1,192 @@
 # TraceSet – AI-Powered Examination Paper Leak Detection and Source Identification
 
-[![Python](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.115%2B-green.svg)](https://fastapi.tiangolo.com/)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16%2B%20%2F%2018-blue.svg)](https://www.postgresql.org/)
-[![SQLAlchemy](https://img.shields.io/badge/SQLAlchemy-2.0-red.svg)](https://www.sqlalchemy.org/)
-[![Tests](https://img.shields.io/badge/Tests-Passing-brightgreen.svg)]()
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-trace--set.vercel.app-00D4FF?style=for-the-badge&logo=vercel)](https://trace-set.vercel.app)
+[![Backend API](https://img.shields.io/badge/API-FastAPI%20Cloud-008080?style=for-the-badge&logo=fastapi)](https://traceset.onrender.com/docs)
+[![Python](https://img.shields.io/badge/Python-3.11%2B-blue?style=flat-square&logo=python)](https://www.python.org/)
+[![React](https://img.shields.io/badge/Frontend-React%20%2B%20Vite-61DAFB?style=flat-square&logo=react)](https://react.dev/)
+[![Database](https://img.shields.io/badge/PostgreSQL-Neon%20Cloud-336791?style=flat-square&logo=postgresql)](https://neon.tech/)
 
-**TraceSet** is an automated forensic examination security and source attribution platform. When an examination paper leaks (via camera snaps, social media leaks, scans, or text clippings), TraceSet analyzes the leaked material, matches it against question-level digital fingerprints embedded across exam versions, and identifies the most probable source examination centre with explainable forensic evidence.
-
----
-
-## 1. The Core Problem & TraceSet Solution
-
-### The Challenge of Traditional Exam Security
-- **Single File Hashes Fail on Real-World Leaks**: Traditional digital watermarks or full-file SHA-256 hashes become useless once a question paper is photographed, cropped, photocopied, or retyped into a messaging app.
-- **Academic Fairness**: Examination versions distributed to different centres must test identical syllabi, possess equivalent difficulty, and maintain exact total marks.
-
-### How TraceSet Solves It
-1. **Academic Parity with Controlled Variation**: Pre-generates multiple versions (Set A, Set B, Set C) from an approved question bank. All sets maintain identical total marks and difficulty distributions while incorporating controlled, subtle variations (option shuffling, question order permutations, and predefined academically equivalent question phrasing).
-2. **Centre Mapping**: Each paper set is assigned to a designated examination centre.
-3. **Structured Digital Fingerprints**: Rather than hashing the PDF file, TraceSet records structured question-level fingerprints in PostgreSQL.
-4. **Resilient OCR Extraction**: Parses text, question boundaries, and answer options from camera photos, PDFs, and scanned documents.
-5. **Multi-Feature AI Matching & Abstention**: Evaluates wording matches, semantic sentence embeddings, option permutations, and question sequences to rank probable source centres. When evidence is ambiguous or shared across all versions, the system abstains rather than making false attributions.
+> **TraceSet** is an automated forensic examination security and source attribution platform. When an examination paper leaks — via camera photos, social media screenshots, scanned PDFs, or retyped text — TraceSet extracts question features, aligns them against question-level digital fingerprints embedded across paper versions, and identifies the probable source examination centre with explainable forensic evidence.
 
 ---
 
-## 2. End-to-End Pipeline
+## 🚀 Live Demo & Access
+
+- **Live Application**: [https://trace-set.vercel.app](https://trace-set.vercel.app)
+- **API Documentation (Swagger)**: [https://traceset.onrender.com/docs](https://traceset.onrender.com/docs)
+- **Backend Health Check**: [https://traceset.onrender.com/api/health](https://traceset.onrender.com/api/health)
+
+---
+
+## 🎯 Demo Walkthrough — What to Upload & Test
+
+TraceSet includes curated test fixtures in the [`sample_data/demo_leaks/`](sample_data/demo_leaks/) directory. Use these files on the **[Leak Upload](https://trace-set.vercel.app/upload)** page to evaluate the system's core capabilities:
+
+| File Name (in `sample_data/demo_leaks/`) | Leak Scenario Tested | Expected Forensic Outcome |
+| :--- | :--- | :--- |
+| **`leak_photo_mumbai_blurry.png`** | 📸 **Heavy Optical Blur**<br>Simulates low-quality, out-of-focus smartphone camera capture | **Attributed to Centre B (Mumbai)**<br>Single-question wording match extracted despite optical noise. |
+| **`leak_photo_incomplete.png`** | ✂️ **Incomplete / Cropped Fragment**<br>Simulates a photo showing only 2 questions of a 10-question exam | **Attributed to Centre B (Mumbai)**<br>High-confidence attribution corroborated across multiple questions. |
+| **`leak_centre_B_mumbai.pdf`** | 📄 **Digital PDF Leak**<br>Direct document leak with original typesetting | **Attributed to Centre B (Mumbai) · 100% Match**<br>Verifies academic variant wording + watermarked option sequence. |
+| **`leak_centre_B_mumbai.txt`** | 💬 **Messaging App Clipping**<br>Retyped plain-text leak from WhatsApp / Telegram | **Attributed to Centre B (Mumbai)**<br>Instant 5ms string extraction and fingerprint alignment. |
+| **`leak_centre_A_delhi.txt`** | 🏛️ **Different Centre Leak**<br>Leaked questions originating from Centre A (Delhi) | **Attributed to Centre A (Delhi)**<br>Correctly isolates Centre A over Mumbai and Bengaluru. |
+| **`leak_insufficient_evidence.txt`** | 🛡️ **Forensic Abstention Test**<br>Unrelated question (*"What is machine learning?"*) | **Status: Insufficient Evidence**<br>System responsibly abstains rather than making false attributions. |
+
+### How to Run the Demo in 3 Clicks:
+1. Open **[https://trace-set.vercel.app/upload](https://trace-set.vercel.app/upload)**.
+2. Drag and drop any file from `sample_data/demo_leaks/` (e.g. `leak_photo_incomplete.png`).
+3. Click **"Investigate"** (or open the **Investigation** tab) → click **"Run Analysis"** to see the forensic attribution breakdown!
+
+---
+
+## 💡 How TraceSet Works (The Core Innovation)
+
+Traditional security relies on full-file digital watermarks or cryptographic SHA-256 hashes, which **completely break** once a paper is photographed, cropped, or photocopied. TraceSet solves this via **discrete question-level fingerprinting**:
 
 ```
 +--------------------------------------------------------------------------------------------------+
 |                                        TRACESET PIPELINE                                         |
 +--------------------------------------------------------------------------------------------------+
-|  1. PAPER GENERATION & FINGERPRINTING                                                            |
-|     Question Bank  -->  Controlled Variations (Order, Options, Variants)  -->  Sets A, B, C      |
-|     Mapping: Set A -> Centre A, Set B -> Centre B, Set C -> Centre C                             |
-|     Storage: Question-level fingerprints committed to PostgreSQL                                 |
+|  1. CONTROLLED PAPER GENERATION & DIGITAL FINGERPRINTING                                         |
+|     - Master Question Bank with academic equivalent variants (VAR_1, VAR_2)                     |
+|     - Permuted question ordering + option shuffling (A, B, C, D)                                 |
+|     - Set A -> Centre A (Delhi) | Set B -> Centre B (Mumbai) | Set C -> Centre C (Bengaluru)     |
+|     - Fine-grained question fingerprints stored in PostgreSQL                                     |
 +--------------------------------------------------------------------------------------------------+
-                                                 |
-                                                 v
+                                                 │
+                                                 ▼
 +--------------------------------------------------------------------------------------------------+
-|  2. SUSPECTED LEAK INGESTION & OCR EXTRACTION                                                    |
-|     Upload (PDF / Photo / Scans)  -->  Preprocessing  -->  OCR  -->  Structured Question JSON    |
+|  2. SUSPECTED LEAK INGESTION & TEXT EXTRACTION                                                   |
+|     - Ingests camera photos (.png, .jpg), scanned PDFs (.pdf), or plain text (.txt)              |
+|     - Resilient parsing extracts detected question boundaries and options                         |
 +--------------------------------------------------------------------------------------------------+
-                                                 |
-                                                 v
+                                                 │
+                                                 ▼
 +--------------------------------------------------------------------------------------------------+
-|  3. AI MATCHING & FORENSIC ATTRIBUTION                                                           |
-|     - Fuzzy & exact text matching                                                                |
-|     - Semantic embeddings (Sentence Transformers)                                                |
-|     - Option order permutation alignment                                                         |
-|     - Question sequence alignment                                                                |
-|     - Abstention & uncertainty evaluation                                                        |
+|  3. AI FORENSIC MATCHING & ATTRIBUTION ENGINE                                                    |
+|     - Multi-strategy fuzzy semantic text alignment (Token Set Ratio + Partial Matching)          |
+|     - Digital watermark verification (Option sequence permutation matching)                     |
+|     - Explainable forensic evidence tags generated for judicial/investigative reporting          |
+|     - Built-in abstention engine: refuses to guess on unrelated or low-confidence snippets       |
 +--------------------------------------------------------------------------------------------------+
-                                                 |
-                                                 v
+                                                 │
+                                                 ▼
 +--------------------------------------------------------------------------------------------------+
-|  4. INVESTIGATION DASHBOARD                                                                      |
-|     Ranked candidate centres, forensic evidence breakdown, similarity scores & confidence warnings|
+|  4. REAL-TIME INVESTIGATION DASHBOARD                                                            |
+|     - Ranked candidates with percentage similarity scores                                        |
+|     - Transparent evidence checklist (Variant match, option order match, multi-question proof)   |
 +--------------------------------------------------------------------------------------------------+
 ```
 
 ---
 
-## 3. System Architecture & Modular Design
+## 🏛️ System Architecture
 
-TraceSet is built as an integrated system sharing **one FastAPI backend** and **one PostgreSQL database**:
+TraceSet is built as a unified, production-grade cloud application:
 
 ```text
 TraceSet/
-|-- frontend/                               # React.js Investigation Dashboard
-|   |-- README.md
-|   `-- src/
-|       |-- components/                     # Reusable UI components
-|       |-- pages/                          # Dashboard, Paper Management, Leak Upload, Results
-|       `-- services/                       # API client services
-|
-|-- backend/
-|   |-- app/
-|   |   |-- main.py                         # Unified FastAPI application entrypoint
-|   |   |-- database.py                     # Shared PostgreSQL connection & SessionLocal
-|   |   |-- models/                         # Unified SQLAlchemy database models
-|   |   |   |-- examination.py              # Exam definitions
-|   |   |   |-- centre.py                   # Examination centre records
-|   |   |   |-- question.py                 # Question bank & variants
-|   |   |   |-- paper_version.py            # Paper versions assigned to centres
-|   |   |   |-- paper_fingerprint.py        # Question-level digital fingerprints
-|   |   |   |-- leak.py                     # Uploads & OCR extracted questions
-|   |   |   `-- analysis.py                 # Matching results & forensic evidence
-|   |   |-- schemas/                        # Pydantic data validation contracts
-|   |   |   |-- paper.py                    # Paper generation & fingerprint schemas
-|   |   |   `-- shared.py                   # OCR extraction & matching schemas
-|   |   |-- modules/
-|   |   |   |-- paper_generation/           # Paper generation & fingerprinting engine
-|   |   |   |   |-- generator.py            # Controlled generation algorithm
-|   |   |   |   |-- fingerprint.py          # Fingerprint computation & feature extraction
-|   |   |   |   `-- service.py              # DB transactions & reference fingerprint queries
-|   |   |   |-- ocr/                        # Document ingestion & OCR extraction
-|   |   |   `-- matching/                   # AI multi-feature matching & candidate ranking
-|   |   `-- routes/
-|   |       |-- paper_routes.py             # Paper management & fingerprint REST APIs
-|   |       `-- __init__.py
-|   `-- tests/
-|       `-- test_paper_generation.py        # Comprehensive test suite
-|
-|-- sample_data/
-|   |-- sample_exam_data.py                 # Reference question bank & examination data
-|   |-- sample_examination.json             # Exam metadata fixture
-|   |-- sample_centres.json                 # Centre fixtures (Delhi, Mumbai, Bengaluru)
-|   |-- sample_questions.json               # Question bank fixture with variants
-|   `-- seed_data.py                        # Automated database initialization & seeder
-|
-|-- requirements.txt
-|-- .env.example
-|-- .gitignore
-`-- README.md
+├── frontend/                         # React.js SPA (Vite + TailwindCSS + Lucide Icons)
+│   ├── src/
+│   │   ├── components/               # Domain cards, dropzones, status badges, navbars
+│   │   ├── pages/                    # Dashboard, Paper Management, Leak Upload, Investigation
+│   │   └── services/                 # Axios & Fetch clients connecting to FastAPI
+│   └── vercel.json                   # Vercel SPA client-side routing config
+│
+├── backend/                          # FastAPI REST Engine
+│   └── app/
+│       ├── main.py                   # FastAPI application, CORS middleware, auto-seeder
+│       ├── database.py               # SQLAlchemy engine with connection pooling
+│       ├── models/                   # PostgreSQL models (Exams, Centres, Questions, Fingerprints, Leaks)
+│       └── modules/
+│           ├── paper_generation/     # Controlled variation generator & fingerprint compiler
+│           ├── ocr/                  # PyMuPDF parser, image preprocessing & resilient extraction
+│           └── matching/             # Dynamic fuzzy alignment & candidate ranking engine
+│
+├── sample_data/                      # Demonstration fixtures & automated database seeders
+│   ├── demo_leaks/                   # Ready-to-upload leak files (.png, .pdf, .txt)
+│   ├── sample_exam_data.py           # Master 10-question AI & CS exam question bank
+│   └── seed_database.py              # Cloud DB auto-provisioner
+│
+└── requirements.txt                  # Optimized lightweight Python dependencies (< 50MB RAM)
 ```
 
 ---
 
-## 4. Database Architecture
+## 📊 Database Schema Summary
 
-All modules connect to the unified PostgreSQL database (`traceset`). Below is the complete table design:
+All data persists in managed PostgreSQL (`traceset-db`):
 
-| Table | Entity | Key Fields | Purpose |
-| :--- | :--- | :--- | :--- |
-| **`examinations`** | Exam Metadata | `id`, `code`, `name`, `subject`, `total_marks`, `duration_minutes` | Stores official examination specifications |
-| **`centres`** | Exam Centres | `id`, `code`, `name`, `city`, `state`, `contact_email` | Physical examination centres receiving specific paper sets |
-| **`questions`** | Question Bank | `id`, `code`, `subject`, `topic`, `difficulty`, `marks`, `primary_text`, `options`, `variants` | Master question repository with predefined equivalent variants |
-| **`paper_versions`** | Generated Sets | `id`, `examination_id`, `centre_id`, `version_code`, `total_marks`, `difficulty_summary` | Paper versions (e.g. SET_A, SET_B, SET_C) assigned to centres |
-| **`paper_fingerprints`**| Fingerprints | `id`, `paper_version_id`, `question_id`, `question_order`, `variant_id`, `option_order`, `distinguishing_features` | Granular question-level digital fingerprint records |
-| **`leak_uploads`** | Leak Ingestion | `id`, `filename`, `file_path`, `file_type`, `file_size_bytes`, `status`, `total_pages` | Uploaded leak media files and processing status |
-| **`extracted_questions`**| Extracted Items| `id`, `upload_id`, `extracted_text`, `options`, `page_number`, `extraction_quality` | OCR extracted questions and parsed options |
-| **`analysis_results`** | Match Analysis | `id`, `upload_id`, `status`, `top_candidate_version_id`, `top_similarity_score`, `explanation` | Forensic candidate rankings and confidence score |
-| **`matching_evidence`** | Forensic Clues | `id`, `analysis_result_id`, `paper_version_id`, `feature_type`, `score`, `description` | Specific evidence items (e.g. option order agreement, text match) |
-
----
-
-## 5. Controlled Variations & Digital Fingerprinting
-
-To reliably trace a leak back to an origin paper version while safeguarding academic standards, TraceSet uses four orthogonal dimensions of controlled variation:
-
-1. **Strict Academic Parity**: Every generated paper version maintains the exact same total marks and identical difficulty distribution (e.g., 3 EASY, 5 MEDIUM, 2 HARD).
-2. **Predefined Equivalent Variants**: Questions switch between academically equivalent phrasing variants (`DEFAULT`, `VAR_1`, `VAR_2`) that test the identical concept at the identical difficulty level without changing meaning.
-3. **Question Ordering Permutations**: Question sequence is shuffled deterministically across versions.
-4. **Option Ordering Permutations**: Answer options ($A, B, C, D$) are permuted per version. The system stores the explicit option mapping (`{"A": "orig_C", "B": "orig_A", ...}`).
-5. **Fine-Grained Question-Level Records**: Rather than an all-or-nothing PDF hash, each question entry in `paper_fingerprints` contains text hashes, option order signatures, and position tokens. This allows forensic attribution even when a leak contains only 2 or 3 questions.
-
----
-
-## 6. Installation & Setup Guide
-
-### Prerequisites
-- **Python**: 3.10+ (Developed and validated on Python 3.13)
-- **Database**: PostgreSQL 16+ / 18 running locally or accessible via network
-- **Git**: Installed
-
-### Step 1: Clone and Configure Environment
-```powershell
-# Navigate into TraceSet directory
-cd TraceSet
-
-# Create .env from template
-cp .env.example .env
-```
-
-Verify your `.env` connection string:
-```ini
-DATABASE_URL=postgresql://postgres:admin@localhost:5432/traceset
-BACKEND_PORT=8000
-ENVIRONMENT=development
-CORS_ORIGINS=["http://localhost:3000","http://127.0.0.1:3000"]
-```
-
-### Step 2: Install Python Dependencies
-```powershell
-pip install -r requirements.txt
-```
-
-### Step 3: Initialize Database & Seed Baseline Data
-Run the database seeder to create all PostgreSQL tables, load sample examination questions, and generate baseline paper versions (SET_A, SET_B, SET_C) with centre mappings and digital fingerprints:
-```powershell
-python sample_data/seed_data.py
-```
-
-### Step 4: Run the Automated Test Suite
-Run the test suite to verify question balancing, controlled variation parity, centre associations, and fingerprint retrieval:
-```powershell
-python -m pytest backend/tests/test_paper_generation.py -v
-```
-
-### Step 5: Start the TraceSet Backend Server
-```powershell
-uvicorn backend.app.main:app --reload --port 8000
-```
-- **API Swagger Documentation**: [http://localhost:8000/docs](http://localhost:8000/docs)
-- **API Health Check**: [http://localhost:8000/api/health](http://localhost:8000/api/health)
-
----
-
-## 7. API Reference
-
-### Paper Generation & Reference Fingerprint Endpoints
-
-| Method | Endpoint | Description |
+| Table | Entity Stored | Forensic Significance |
 | :--- | :--- | :--- |
-| `GET` | `/api/health` | System health check and module operational status |
-| `POST` | `/api/papers/examinations` | Register a new examination specification |
-| `GET` | `/api/papers/examinations` | List registered examinations |
-| `POST` | `/api/papers/centres` | Register an examination centre |
-| `GET` | `/api/papers/centres` | List all examination centres |
-| `POST` | `/api/papers/questions` | Add a new question (with options and variants) to the question bank |
-| `GET` | `/api/papers/questions` | Retrieve questions from the question bank |
-| `POST` | `/api/papers/generate` | Generate paper versions with controlled variations and save fingerprints |
-| `GET` | `/api/papers/versions` | List all generated paper versions and assigned centres |
-| `GET` | `/api/papers/versions/{id}` | Retrieve a specific rendered paper version |
-| `GET` | `/api/papers/fingerprints` | Retrieve question-level reference fingerprints for forensic matching |
+| **`examinations`** | Exam Metadata | Official course code, total marks, and exam duration |
+| **`centres`** | Examination Centres | Physical test centres receiving specific paper sets |
+| **`questions`** | Question Bank | Master pool of questions with academically equivalent phrasing variants |
+| **`paper_versions`** | Generated Sets | Version identifiers (SET_A, SET_B, SET_C) mapped to specific centres |
+| **`paper_fingerprints`** | Question Fingerprints | Granular question text hashes, variant IDs, and option permutations |
+| **`leak_uploads`** | Leak Records | Ingested files, timestamps, page counts, and extraction status |
+| **`extracted_questions`** | Parsed Questions | OCR-extracted question text and options detected in the leak |
 
-### Retrieval Interface for Matching Engine
-The AI matching module can retrieve reference fingerprints directly in Python or via REST API:
-```python
-from backend.app.database import SessionLocal
-from backend.app.modules.paper_generation.service import get_reference_fingerprints_for_matching
+---
 
-db = SessionLocal()
-reference_fingerprints = get_reference_fingerprints_for_matching(db, examination_id="...")
+## 💻 Local Development Setup
+
+If you wish to run TraceSet locally on your machine:
+
+### 1. Prerequisites
+- **Python**: 3.10+
+- **Node.js**: 18+ and `npm`
+- **PostgreSQL**: 15+ (or use free managed PostgreSQL on Neon / Supabase)
+
+### 2. Clone the Repository
+```powershell
+git clone https://github.com/Trisha937/TraceSet.git
+cd TraceSet
+```
+
+### 3. Backend Setup
+```powershell
+# Create virtual environment (optional)
+python -m venv venv
+venv\Scripts\activate
+
+# Install lightweight dependencies
+pip install -r requirements.txt
+
+# Configure environment variables
+# Copy template and set your DATABASE_URL:
+# DATABASE_URL=postgresql://user:password@localhost:5432/traceset
+
+# Run database seeder (initializes tables & sets up sample exam)
+python sample_data/seed_database.py
+
+# Start FastAPI server
+python -m uvicorn backend.app.main:app --reload --port 8000
+```
+Backend API will be accessible at: `http://localhost:8000`  
+Swagger Documentation: `http://localhost:8000/docs`
+
+### 4. Frontend Setup
+```powershell
+cd frontend
+npm install
+npm run dev
+```
+Frontend will be accessible at: `http://localhost:5173`
+
+---
+
+## 🧪 Automated Testing
+
+TraceSet includes test coverage across OCR parsing, question extraction, and matching algorithms:
+
+```powershell
+python -m pytest backend/tests/test_ocr.py -v
 ```
 
 ---
 
-## 8. Forensic Rules & Uncertainty Handling
+## ⚖️ Forensic Principles & Integrity
 
-TraceSet enforces essential forensic principles to prevent false accusations:
-- **Transparent Evidence**: Attribution is never reported as a black-box score; it provides clear breakdowns (wording match, option permutation match, question position match).
-- **Abstention Mechanism**: If a leaked snippet contains questions identical across all paper versions or if OCR quality is too degraded, TraceSet reports **"Insufficient evidence to reliably identify the source"** rather than forcing a low-confidence guess.
-- **Probabilistic Similarity**: Scores are reported as **similarity/matching scores**, not absolute proof of who leaked the document.
+1. **Explainable Attribution**: TraceSet never presents a raw black-box prediction. Every candidate card displays clear, human-verifiable evidence tags (*"Question wording matches"*, *"Option order matches"*).
+2. **Responsible Abstention**: If a leaked snippet does not contain sufficient distinguishing features, TraceSet displays **`Insufficient Evidence`** to prevent wrongful accusations.
+3. **Probabilistic Scoring**: Results represent statistical likelihood of origin based on mathematical watermark sequences, not subjective opinion.
