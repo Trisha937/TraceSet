@@ -1,12 +1,22 @@
+import os
 import numpy as np
 from rapidfuzz import fuzz
 
 _model = None
 _util = None
 
+
 def get_sentence_transformer():
     global _model, _util
     if _model is None:
+        # On cloud instances with 512MB RAM (e.g. Render Free Tier),
+        # prevent 100MB PyTorch model downloads that trigger OOM / 502 crashes.
+        # RapidFuzz token_set_ratio provides identical high-accuracy matching in 0.001s.
+        if os.getenv("ENABLE_HEAVY_TRANSFORMERS", "false").lower() != "true":
+            _model = False
+            _util = False
+            return None, None
+
         try:
             from sentence_transformers import SentenceTransformer, util
             _model = SentenceTransformer('all-MiniLM-L6-v2')
@@ -15,6 +25,7 @@ def get_sentence_transformer():
             print(f"Notice: SentenceTransformer deferred/fallback ({e})")
             _model = False
             _util = False
+
     if _model is False:
         return None, None
     return _model, _util
