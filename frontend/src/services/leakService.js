@@ -7,24 +7,39 @@ const API_BASE_URL = (
   import.meta.env.VITE_API_BASE_URL || 'https://traceset.onrender.com'
 ).replace(/\/$/, '');
 
+// 90 second timeout to handle Render free-tier cold starts (50s wake-up)
 async function apiRequest(url, options = {}) {
-  const response = await fetch(`${API_BASE_URL}${url}`, options);
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 90000);
 
-  const contentType = response.headers.get('content-type') || '';
-  const body = contentType.includes('application/json')
-    ? await response.json()
-    : await response.text();
+  try {
+    const response = await fetch(`${API_BASE_URL}${url}`, {
+      ...options,
+      signal: controller.signal,
+    });
 
-  if (!response.ok) {
-    const message =
-      typeof body === 'object'
-        ? body.detail || body.message
-        : body;
+    const contentType = response.headers.get('content-type') || '';
+    const body = contentType.includes('application/json')
+      ? await response.json()
+      : await response.text();
 
-    throw new Error(message || `API error: ${response.status}`);
+    if (!response.ok) {
+      const message =
+        typeof body === 'object'
+          ? body.detail || body.message
+          : body;
+      throw new Error(message || `API error: ${response.status}`);
+    }
+
+    return body;
+  } catch (err) {
+    if (err.name === 'AbortError') {
+      throw new Error('Request timed out. Backend may be waking up — please try again.');
+    }
+    throw err;
+  } finally {
+    clearTimeout(timer);
   }
-
-  return body;
 }
 
 export const leakService = {
