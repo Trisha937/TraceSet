@@ -33,12 +33,14 @@ function unwrapData(response) {
 
 export const matchingService = {
   async runAnalysis(uploadId) {
-    // 1. Fetch extracted questions from the uploaded paper.
-    const upload = await apiRequest(
-      `/api/leaks/${encodeURIComponent(uploadId)}/questions`
-    )
+    // 1. Fetch extracted questions and upload detail
+    const [upload, uploadDetail] = await Promise.all([
+      apiRequest(`/api/leaks/${encodeURIComponent(uploadId)}/questions`),
+      apiRequest(`/api/leaks/${encodeURIComponent(uploadId)}`).catch(() => null),
+    ])
 
     const extractedQuestions = unwrapData(upload)
+    const filename = uploadDetail?.filename || ''
 
     if (!Array.isArray(extractedQuestions) || extractedQuestions.length === 0) {
       throw new Error('No extracted questions found for this upload.')
@@ -94,6 +96,8 @@ export const matchingService = {
       body: JSON.stringify({
         leaked_questions: leakedQuestions,
         official_paper_versions: officialPaperVersions,
+        upload_id: uploadId,
+        filename: filename,
       }),
     })
 

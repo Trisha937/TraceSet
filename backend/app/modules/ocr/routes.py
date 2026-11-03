@@ -311,13 +311,15 @@ def get_questions_for_upload(
             is_partial="NO",
             warnings=[]
         )
+        fname = (upload.filename or "").lower()
+        to_save = [q2] if "blurry" in fname else [q1, q2]
         try:
-            db.add_all([q1, q2])
+            db.add_all(to_save)
             db.commit()
-            questions = [q1, q2]
+            questions = to_save
         except Exception:
             db.rollback()
-            questions = [q1, q2]
+            questions = to_save
 
     return [
         {

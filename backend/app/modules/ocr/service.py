@@ -196,7 +196,7 @@ def process_leak_file(
             }]
 
         elif name.endswith((".png", ".jpg", ".jpeg", ".tif", ".tiff")):
-            pages = extract_image_text(file_bytes)
+            pages = extract_image_text(file_bytes, filename=filename)
 
         else:
             raise FileValidationError("Unsupported file type.")

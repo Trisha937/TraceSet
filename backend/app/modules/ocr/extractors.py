@@ -49,9 +49,9 @@ def extract_pdf_pages(file_bytes: bytes):
         doc.close()
 
 
-def extract_image_text(file_bytes: bytes):
+def extract_image_text(file_bytes: bytes, filename: str | None = None):
     prepared = prepare_image_for_ocr(file_bytes)
-    extracted, confidence = ocr_image(prepared)
+    extracted, confidence = ocr_image(prepared, filename=filename)
 
     return [{
         "page_number": 1,
